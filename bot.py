@@ -169,19 +169,12 @@ class ClaimView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.claimer_id = None
-await channel.send(embed=embed, view=ClaimView())
 
     @discord.ui.button(label="Claim", style=discord.ButtonStyle.green, custom_id="claim_button")
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-        staff_role = discord.utils.get(interaction.guild.roles, name="Staff")
-
-        if staff_role not in interaction.user.roles:
-            await interaction.response.send_message("You are not staff!", ephemeral=True)
-            return
-
         if self.claimer_id is not None:
-            await interaction.response.send_message("This ticket is already claimed!", ephemeral=True)
+            await interaction.response.send_message("Already claimed!", ephemeral=True)
             return
 
         self.claimer_id = interaction.user.id
@@ -194,7 +187,7 @@ await channel.send(embed=embed, view=ClaimView())
     async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if self.claimer_id != interaction.user.id:
-            await interaction.response.send_message("Only the claimer can unclaim this ticket!", ephemeral=True)
+            await interaction.response.send_message("Only the claimer can unclaim!", ephemeral=True)
             return
 
         self.claimer_id = None
@@ -204,7 +197,7 @@ await channel.send(embed=embed, view=ClaimView())
                 item.disabled = False
 
         await interaction.response.edit_message(view=self)
-        await interaction.followup.send("Ticket has been unclaimed.")
+        await interaction.followup.send("Ticket unclaimed.")
         
 @bot.event
 async def on_ready():
