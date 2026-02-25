@@ -163,9 +163,50 @@ class MMPanel(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
 
+class ClaimView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.claimer_id = None
+await channel.send(embed=embed, view=ClaimView())
+
+    @discord.ui.button(label="Claim", style=discord.ButtonStyle.green, custom_id="claim_button")
+    async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        staff_role = discord.utils.get(interaction.guild.roles, name="Staff")
+
+        if staff_role not in interaction.user.roles:
+            await interaction.response.send_message("You are not staff!", ephemeral=True)
+            return
+
+        if self.claimer_id is not None:
+            await interaction.response.send_message("This ticket is already claimed!", ephemeral=True)
+            return
+
+        self.claimer_id = interaction.user.id
+        button.disabled = True
+
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(f"{interaction.user.mention} claimed this ticket.")
+
+    @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red, custom_id="unclaim_button")
+    async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if self.claimer_id != interaction.user.id:
+            await interaction.response.send_message("Only the claimer can unclaim this ticket!", ephemeral=True)
+            return
+
+        self.claimer_id = None
+
+        for item in self.children:
+            if item.custom_id == "claim_button":
+                item.disabled = False
+
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send("Ticket has been unclaimed.")
+        
 @bot.event
 async def on_ready():
-    bot.add_view(TicketView())
+    bot.add_view(ClaimView())
     print(f"Bot is online as {bot.user}")
 
 bot.run(os.getenv("TOKEN"))
