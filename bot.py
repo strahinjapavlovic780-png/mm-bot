@@ -165,12 +165,11 @@ class MMPanel(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
 
-await channel.send(
-    "Ticket controls:",
-    view=TicketView()
-)
-self.add_item(ClaimButton())
-self.add_item(UnclaimButton())
+class TicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(ClaimButton())
+        self.add_item(UnclaimButton())
 
 class ClaimButton(discord.ui.Button):
     def __init__(self):
