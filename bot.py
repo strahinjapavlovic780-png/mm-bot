@@ -164,6 +164,40 @@ class MMPanel(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
+
+class ClaimButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label="Claim",
+            style=discord.ButtonStyle.green,
+            custom_id="claim_button"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        channel = interaction.channel
+        user = interaction.user
+
+        # Ako je već neko claimovao
+        if channel.id in claimed_tickets:
+            await interaction.response.send_message(
+                "This ticket is already claimed!",
+                ephemeral=True
+            )
+            return
+
+        claimed_tickets[channel.id] = user.id
+
+        await channel.set_permissions(
+            user,
+            view_channel=True,
+            send_messages=True,
+            read_message_history=True
+        )
+
+        await interaction.response.send_message(
+            f"{user.mention} claimed this ticket!",
+            ephemeral=False
+        )
         
 @bot.event
 async def on_ready():
