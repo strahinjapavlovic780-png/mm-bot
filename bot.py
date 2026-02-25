@@ -169,6 +169,9 @@ await channel.send(
     "Ticket controls:",
     view=TicketView()
 )
+self.add_item(ClaimButton())
+self.add_item(UnclaimButton())
+
 class ClaimButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
