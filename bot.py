@@ -159,7 +159,10 @@ class MMSelect(discord.ui.Select):
             MMModal(self.values[0])
         )
 
-
+await channel.send(
+    "Ticket controls:",
+    view=TicketView()
+)
 class MMPanel(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
