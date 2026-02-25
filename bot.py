@@ -156,7 +156,7 @@ class MMSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.send_modal(
-            MMModal(self.
+            MMModal(self.))
 
 class MMPanel(discord.ui.View):
     def __init__(self):
