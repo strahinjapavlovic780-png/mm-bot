@@ -156,23 +156,27 @@ class MMSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.send_modal(
-            MMModal(self.values[0])
-        )
+            MMModal(self.
 
-await channel.send(
-    "Ticket controls:",
-    view=TicketView()
-)
 class MMPanel(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
 
-class TicketView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(ClaimButton())
-        self.add_item(UnclaimButton())
+import discord
+from discord.ext import commands
+import os
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Store claimed tickets
+claimed_tickets = {}
+
+# ------------------ BUTTONS ------------------
 
 class ClaimButton(discord.ui.Button):
     def __init__(self):
@@ -186,30 +190,76 @@ class ClaimButton(discord.ui.Button):
         channel = interaction.channel
         user = interaction.user
 
-        # Ako je već neko claimovao
         if channel.id in claimed_tickets:
             await interaction.response.send_message(
-                "This ticket is already claimed!",
+                "This ticket is already claimed.",
                 ephemeral=True
             )
             return
 
         claimed_tickets[channel.id] = user.id
 
-        await channel.set_permissions(
-            user,
-            view_channel=True,
-            send_messages=True,
-            read_message_history=True
-        )
-
         await interaction.response.send_message(
-            f"{user.mention} claimed this ticket!",
+            f"{user.mention} has claimed this ticket.",
             ephemeral=False
         )
-        
+
+
+class UnclaimButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label="Unclaim",
+            style=discord.ButtonStyle.red,
+            custom_id="unclaim_button"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        channel = interaction.channel
+        user = interaction.user
+
+        if channel.id not in claimed_tickets:
+            await interaction.response.send_message(
+                "This ticket is not claimed.",
+                ephemeral=True
+            )
+            return
+
+        if claimed_tickets[channel.id] != user.id:
+            await interaction.response.send_message(
+                "You are not the one who claimed this ticket.",
+                ephemeral=True
+            )
+            return
+
+        del claimed_tickets[channel.id]
+
+        await interaction.response.send_message(
+            "Ticket has been unclaimed.",
+            ephemeral=False
+        )
+
+# ------------------ VIEW ------------------
+
+class TicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(ClaimButton())
+        self.add_item(UnclaimButton())
+
+# ------------------ TEST COMMAND ------------------
+
+@bot.command()
+async def ticket(ctx):
+    await ctx.send(
+        "Ticket Controls:",
+        view=TicketView()
+    )
+
+# ------------------ READY EVENT ------------------
+
 @bot.event
 async def on_ready():
+    bot.add_view(TicketView())
     print(f"Bot is online as {bot.user}")
 
 bot.run(os.getenv("TOKEN"))
