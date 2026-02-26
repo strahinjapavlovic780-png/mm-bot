@@ -233,7 +233,6 @@ async def claim(ctx):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
         await ctx.send("Only MM team can claim tickets.")
         return
-
     await ctx.send(f"🔒 {ctx.author.mention} claimed this ticket.")
 
 
@@ -242,25 +241,86 @@ async def unclaim(ctx):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
         await ctx.send("Only MM team can unclaim tickets.")
         return
-
     await ctx.send(f"{ctx.author.mention} unclaimed this ticket.")
 
 
 # ================= HOW MM WORKS =================
 
 @bot.command()
-async def howmm(ctx):
+async def howmmworks(ctx):
+
     embed = discord.Embed(
-        title="How Middleman Works",
-        description=(
-            "1️⃣ Both users agree on trade.\n"
-            "2️⃣ MM holds items/assets.\n"
-            "3️⃣ Both users confirm.\n"
-            "4️⃣ MM releases assets safely.\n\n"
-            "Safe • Secure • Scam-Free"
-        ),
-        color=discord.Color.purple()
+        title="How a Middleman Works",
+        description="A middleman is a trusted third party member who helps ensure both sides of a trade goes as smoothly as possible.",
+        color=discord.Color.blue()
     )
+
+    embed.add_field(
+        name="Step 1",
+        value="Seller gives the item to the middleman.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Step 2",
+        value="Buyer sends the payment.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Step 3",
+        value="Middleman releases the item to the buyer.",
+        inline=False
+    )
+
+    file = discord.File("mm.png", filename="mm.png")
+    embed.set_image(url="attachment://mm.png")
+
+    await ctx.send(embed=embed, file=file)
+
+
+# ================= POLICY =================
+
+@bot.command()
+async def policy(ctx):
+
+    embed = discord.Embed(
+        title="Middleman Accountability & Compensation Policy",
+        color=discord.Color.blue()
+    )
+
+    embed.add_field(
+        name="1. Middleman Responsibility",
+        value=(
+            "Official middlemen must remain neutral and handle all assets fairly. "
+            "Any misuse of authority or failure to return items is considered internal fraud."
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="2. If a Middleman Scams",
+        value=(
+            "• Both traders involved will receive full compensation equal to their losses.\n"
+            "• Compensation will be provided by the Executive Team.\n"
+            "• The middleman will be terminated from our MM team, blacklisted, and banned."
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="3. Compensation Requirements",
+        value=(
+            "• Trade must have taken place within our Official Discord MM Server.\n"
+            "• The middleman must have held the MM role at the time.\n"
+            "• Sufficient proof (screenshots or recordings) must be submitted.\n\n"
+            "**This policy ensures that all trades conducted through our official system are fully protected.**"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="TradeMarket | Middleman Service")
+
     await ctx.send(embed=embed)
 
 
@@ -288,43 +348,105 @@ class ConfirmView(discord.ui.View):
         await interaction.response.send_message("You confirmed the trade.", ephemeral=True)
 
         if len(self.confirmed) == 2:
-            await interaction.channel.send("✅ Both users confirmed the trade!")
+            await interaction.channel.send(
+                f"✅ {self.user1.mention} {self.user2.mention} have confirmed the trade!"
+            )
 
 
 @bot.command()
 async def confirm(ctx, user1: discord.Member, user2: discord.Member):
     await ctx.send(
-        "Both users must click the button to confirm the trade.",
+        "Both users must click to confirm the trade.",
         view=ConfirmView(user1, user2)
     )
 
-
-# ================= FEE SYSTEM =================
+# ================= FEE SYSTEM (UPGRADED) =================
 
 class FeeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+        self.split_users = []
+        self.full_paid = False
 
     @discord.ui.button(label="50% / 50%", style=discord.ButtonStyle.blurple)
     async def split_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            "Both users agreed to pay 50% of the fee.",
-            ephemeral=False
-        )
+
+        if interaction.user in self.split_users:
+            await interaction.response.send_message("You already selected 50%.", ephemeral=True)
+            return
+
+        if self.full_paid:
+            await interaction.response.send_message("100% option already selected.", ephemeral=True)
+            return
+
+        self.split_users.append(interaction.user)
+        await interaction.response.send_message("You selected to pay 50%.", ephemeral=True)
+
+        if len(self.split_users) == 2:
+            user1 = self.split_users[0]
+            user2 = self.split_users[1]
+
+            await interaction.channel.send(
+                f"💰 {user1.mention} {user2.mention} will pay 50% of the fee each."
+            )
+
+            for item in self.children:
+                item.disabled = True
+            await interaction.message.edit(view=self)
+
 
     @discord.ui.button(label="One Pays 100%", style=discord.ButtonStyle.red)
     async def full_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            "One user will pay 100% of the fee.",
-            ephemeral=False
+
+        if self.full_paid:
+            await interaction.response.send_message("Fee option already selected.", ephemeral=True)
+            return
+
+        self.full_paid = True
+
+        await interaction.response.send_message("You selected to pay 100%.", ephemeral=True)
+
+        await interaction.channel.send(
+            f"💰 {interaction.user.mention} will pay 100% of the fees."
         )
+
+        for item in self.children:
+            item.disabled = True
+        await interaction.message.edit(view=self)
 
 
 @bot.command()
 async def fee(ctx):
-    await ctx.send(
-        "Select how the fee will be paid:",
-        view=FeeView()
+
+    embed = discord.Embed(
+        title="Trade Fee Agreement",
+        description=(
+            "To proceed with the middleman service, both parties must agree on how the service fee will be handled.\n\n"
+            "**Fee Options:**\n"
+            "• 50% / 50% – Both users split the fee equally.\n"
+            "• One Pays 100% – One user covers the full service fee.\n\n"
+            "⚠ The trade will not proceed until a fee option is selected.\n"
+            "⚠ Once selected, the decision cannot be changed.\n\n"
+            "This ensures transparency and prevents disputes during the trade."
+        ),
+        color=discord.Color.gold()
     )
+
+    embed.add_field(
+        name="Why is there a fee?",
+        value=(
+            "The fee ensures the safety of both traders and compensates the middleman "
+            "for handling assets securely and professionally."
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="TradeMarket | Official Middleman System")
+
+    file = discord.File("fee.png", filename="fee.png")
+    embed.set_image(url="attachment://fee.png")
+
+    await ctx.send(embed=embed, file=file, view=FeeView())
+
 
 bot.run(os.environ["TOKEN"])
