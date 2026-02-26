@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import os
 
-fee.png
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
