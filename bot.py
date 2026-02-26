@@ -90,26 +90,6 @@ class MMModal(discord.ui.Modal):
             overwrites=overwrites
         )
 
-        embed = discord.Embed(
-            title="Middleman Service",
-            description=(
-                "Welcome to our middleman service centre.\n\n"
-                "At **Trade Market**, we provide a safe and secure way to exchange your goods, "
-                "whether it's in-game items, crypto or digital assets.\n\n"
-                "Our trusted middleman team ensures that both parties receive exactly what they agreed upon "
-                "with **zero risk of scams**.\n\n"
-                "**If you've found a trade and want to ensure your safety, "
-                "you can use our FREE middleman service by following the steps below.**\n\n"
-                "*Note: Large trades may include a small service fee.*\n\n"
-                "📌 **Usage Conditions**\n"
-                "• Find someone to trade with.\n"
-                "• Agree on the trade terms.\n"
-                "• Wait for a staff member to assist you.\n\n"
-                "**Trade Market • Trusted Middleman Service**"
-            ),
-            color=discord.Color.purple()
-        )
-
         ticket_embed = discord.Embed(
             title="New Middleman Ticket",
             color=discord.Color.purple()
@@ -154,7 +134,6 @@ class TicketButtons(discord.ui.View):
         self.claimer = interaction.user
         button.disabled = True
 
-        # LOCK creator
         await interaction.channel.set_permissions(
             self.creator,
             send_messages=False
@@ -180,7 +159,6 @@ class TicketButtons(discord.ui.View):
             if item.label == "Claim":
                 item.disabled = False
 
-        # UNLOCK creator
         await interaction.channel.set_permissions(
             self.creator,
             send_messages=True
@@ -239,7 +217,7 @@ async def panel(ctx):
             "📌 **Usage Conditions**\n"
             "• Find someone to trade with.\n"
             "• Agree on the trade terms.\n"
-            "• Click the button below.\n"
+            "• Click the dropdown below.\n"
             "• Wait for a staff member.\n\n"
             "**Trade Market • Trusted Middleman Service**"
         ),
