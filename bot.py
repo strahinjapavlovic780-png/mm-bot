@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 import os
 
-mm.png
-fee.png
+
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -446,10 +446,11 @@ async def fee(ctx):
 
     embed.set_footer(text="TradeMarket | Official Middleman System")
 
-    file = discord.File("fee.png", filename="fee.png")
-    embed.set_image(url="attachment://fee.png")
+file = discord.File("fee.png", filename="fee.png")
+embed.set_image(url="attachment://fee.png")
+await ctx.send(embed=embed, file=file, view=FeeView())
 
-    await ctx.send(embed=embed, file=file, view=FeeView())
-
+embed.set_image(url="https://cdn.discordapp.com/attachments/1423182693788680212/1427127277434572912/Middleman.png?ex=69a1b019&is=69a05e99&hm=43a25d795752b1100a63c1cb485261af1b41adf04d0d9f087f806e00062edbc7&.png")
+await ctx.send(embed=embed, view=FeeView())
 
 bot.run(os.environ["TOKEN"])
