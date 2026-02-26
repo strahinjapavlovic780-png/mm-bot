@@ -137,21 +137,24 @@ class MMModal(discord.ui.Modal, title="MM Trade Information"):
         await channel.send(interaction.user.mention, embed=embed)
         await interaction.response.send_message("MM ticket created!", ephemeral=True)
 
-
 class MMSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="In Game Items"),
-            discord.SelectOption(label="Crypto"),
-            discord.SelectOption(label="PayPal"),
-            discord.SelectOption(label="Other")
+            discord.SelectOption(label="🎮 In Game Items"),
+            discord.SelectOption(label="📝 Other")
         ]
 
         super().__init__(
-            placeholder="Select trade type...",
+            placeholder="Select trade type",
             min_values=1,
             max_values=1,
             options=options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            f"You selected: {self.values[0]}",
+            ephemeral=True
         )
 
     async def callback(self, interaction: discord.Interaction):
