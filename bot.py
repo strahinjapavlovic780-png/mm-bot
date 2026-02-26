@@ -226,5 +226,105 @@ async def panel(ctx):
 
     await ctx.send(embed=embed, view=MMView())
 
+# ================= CLAIM / UNCLAIM =================
+
+@bot.command()
+async def claim(ctx):
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can claim tickets.")
+        return
+
+    await ctx.send(f"🔒 {ctx.author.mention} claimed this ticket.")
+
+
+@bot.command()
+async def unclaim(ctx):
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can unclaim tickets.")
+        return
+
+    await ctx.send(f"{ctx.author.mention} unclaimed this ticket.")
+
+
+# ================= HOW MM WORKS =================
+
+@bot.command()
+async def howmm(ctx):
+    embed = discord.Embed(
+        title="How Middleman Works",
+        description=(
+            "1️⃣ Both users agree on trade.\n"
+            "2️⃣ MM holds items/assets.\n"
+            "3️⃣ Both users confirm.\n"
+            "4️⃣ MM releases assets safely.\n\n"
+            "Safe • Secure • Scam-Free"
+        ),
+        color=discord.Color.purple()
+    )
+    await ctx.send(embed=embed)
+
+
+# ================= CONFIRM SYSTEM =================
+
+class ConfirmView(discord.ui.View):
+    def __init__(self, user1, user2):
+        super().__init__(timeout=None)
+        self.user1 = user1
+        self.user2 = user2
+        self.confirmed = []
+
+    @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if interaction.user not in [self.user1, self.user2]:
+            await interaction.response.send_message("You are not part of this trade.", ephemeral=True)
+            return
+
+        if interaction.user in self.confirmed:
+            await interaction.response.send_message("You already confirmed.", ephemeral=True)
+            return
+
+        self.confirmed.append(interaction.user)
+        await interaction.response.send_message("You confirmed the trade.", ephemeral=True)
+
+        if len(self.confirmed) == 2:
+            await interaction.channel.send("✅ Both users confirmed the trade!")
+
+
+@bot.command()
+async def confirm(ctx, user1: discord.Member, user2: discord.Member):
+    await ctx.send(
+        "Both users must click the button to confirm the trade.",
+        view=ConfirmView(user1, user2)
+    )
+
+
+# ================= FEE SYSTEM =================
+
+class FeeView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="50% / 50%", style=discord.ButtonStyle.blurple)
+    async def split_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(
+            "Both users agreed to pay 50% of the fee.",
+            ephemeral=False
+        )
+
+    @discord.ui.button(label="One Pays 100%", style=discord.ButtonStyle.red)
+    async def full_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(
+            "One user will pay 100% of the fee.",
+            ephemeral=False
+        )
+
+
+@bot.command()
+async def fee(ctx):
+    await ctx.send(
+        "Select how the fee will be paid:",
+        view=FeeView()
+    )
 
 bot.run(os.environ["TOKEN"])
