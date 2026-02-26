@@ -113,16 +113,16 @@ class MMModal(discord.ui.Modal, title="MM Trade Information"):
         self.trade_type = trade_type
 
     async def on_submit(self, interaction: discord.Interaction):
-        guild = interaction.guild
-        category = discord.utils.get(guild.categories, name="MM Tickets")
+    embed = discord.Embed(
+        title="New Middleman Ticket",
+        description=f"Trade Type: {self.trade_type}",
+        color=discord.Color.blue()
+    )
 
-        if not category:
-            category = await guild.create_category("MM Tickets")
-
-        channel = await guild.create_text_channel(
-            name=f"mm-{interaction.user.name}",
-            category=category
-        )
+    await interaction.response.send_message(
+        embed=embed,
+        view=TicketButtons()
+    )
 
         embed = discord.Embed(
             title="New MM Request",
@@ -155,45 +155,37 @@ class MMSelect(discord.ui.Select):
         selected = self.values[0]
         await interaction.response.send_modal(MMModal(selected))
             
-
-class MMPanel(discord.ui.View):
+class TicketButtons(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(MMSelect())
+        self.claimer = None
 
-class ClaimView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.claimer_id = None
-
-    @discord.ui.button(label="Claim", style=discord.ButtonStyle.green, custom_id="claim_button")
+    @discord.ui.button(label="Claim", style=discord.ButtonStyle.green)
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if self.claimer_id is not None:
-            await interaction.response.send_message("Already claimed!", ephemeral=True)
+        if self.claimer is not None:
+            await interaction.response.send_message("Already claimed.", ephemeral=True)
             return
 
-        self.claimer_id = interaction.user.id
+        self.claimer = interaction.user
         button.disabled = True
-
         await interaction.response.edit_message(view=self)
         await interaction.followup.send(f"{interaction.user.mention} claimed this ticket.")
 
-    @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red, custom_id="unclaim_button")
+    @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red)
     async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if self.claimer_id != interaction.user.id:
-            await interaction.response.send_message("Only the claimer can unclaim!", ephemeral=True)
+        if self.claimer != interaction.user:
+            await interaction.response.send_message("You didn't claim this.", ephemeral=True)
             return
 
-        self.claimer_id = None
+        self.claimer = None
 
         for item in self.children:
-            if item.custom_id == "claim_button":
+            if item.label == "Claim":
                 item.disabled = False
 
         await interaction.response.edit_message(view=self)
-        await interaction.followup.send("Ticket unclaimed.")
+        await interaction.followup.send(f"{interaction.user.mention} unclaimed this ticket.")
+
         
 @bot.event
 async def on_ready():
