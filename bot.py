@@ -140,8 +140,8 @@ class MMModal(discord.ui.Modal, title="MM Trade Information"):
 class MMSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="🎮 In Game Items"),
-            discord.SelectOption(label="📝 Other")
+            discord.SelectOption(label="In Game Items"),
+            discord.SelectOption(label="Other")
         ]
 
         super().__init__(
@@ -152,14 +152,8 @@ class MMSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message(
-            f"You selected: {self.values[0]}",
-            ephemeral=True
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-    selected = self.values[0]
-    await interaction.response.send_modal(MMModal(selected))
+        selected = self.values[0]
+        await interaction.response.send_modal(MMModal(selected))
             
 
 class MMPanel(discord.ui.View):
