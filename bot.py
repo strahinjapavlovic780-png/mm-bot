@@ -1,20 +1,26 @@
 import discord
 from discord.ext import commands
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds = True
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+CATEGORY_NAME = "MM TICKETS"
+STAFF_ROLE_NAME = "Staff"  # promeni ako ti se role zove drugačije
 
-# ================= SELECT =================
+
+# ================= PANEL VIEW =================
 
 class MMSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(label="In Game Items"),
             discord.SelectOption(label="Crypto"),
-            discord.SelectOption(label="Paypal")
+            discord.SelectOption(label="Paypal"),
         ]
 
         super().__init__(
@@ -25,8 +31,7 @@ class MMSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        selected = self.values[0]
-        await interaction.response.send_modal(MMModal(selected))
+        await interaction.response.send_modal(MMModal(self.values[0]))
 
 
 class MMView(discord.ui.View):
@@ -42,30 +47,42 @@ class MMModal(discord.ui.Modal):
         super().__init__(title="Middleman Request")
         self.trade_type = trade_type
 
-        self.username = discord.ui.TextInput(
-            label="Username of other person",
-            placeholder="Enter their username",
-            required=True
-        )
-
-        self.trade = discord.ui.TextInput(
-            label="What is the trade?",
-            placeholder="Describe the trade",
-            required=True,
+        self.other_user = discord.ui.TextInput(label="Other User")
+        self.trade_details = discord.ui.TextInput(
+            label="Trade Details",
             style=discord.TextStyle.paragraph
         )
+        self.agreement = discord.ui.TextInput(label="Did both agree?")
 
-        self.agree = discord.ui.TextInput(
-            label="Did both parties agree?",
-            placeholder="Yes / No",
-            required=True
-        )
-
-        self.add_item(self.username)
-        self.add_item(self.trade)
-        self.add_item(self.agree)
+        self.add_item(self.other_user)
+        self.add_item(self.trade_details)
+        self.add_item(self.agreement)
 
     async def on_submit(self, interaction: discord.Interaction):
+
+        guild = interaction.guild
+
+        # CREATE / GET CATEGORY
+        category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
+        if category is None:
+            category = await guild.create_category(CATEGORY_NAME)
+
+        staff_role = discord.utils.get(guild.roles, name=STAFF_ROLE_NAME)
+
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
+        }
+
+        if staff_role:
+            overwrites[staff_role] = discord.PermissionOverwrite(view_channel=True, send_messages=True)
+
+        # CREATE CHANNEL
+        channel = await guild.create_text_channel(
+            name=f"mm-{interaction.user.name}",
+            category=category,
+            overwrites=overwrites
+        )
 
         embed = discord.Embed(
             title="New Middleman Ticket",
@@ -73,15 +90,21 @@ class MMModal(discord.ui.Modal):
         )
 
         embed.add_field(name="Trade Type", value=self.trade_type, inline=False)
-        embed.add_field(name="Other User", value=self.username.value, inline=False)
-        embed.add_field(name="Trade Details", value=self.trade.value, inline=False)
-        embed.add_field(name="Agreement", value=self.agree.value, inline=False)
+        embed.add_field(name="Other User", value=self.other_user.value, inline=False)
+        embed.add_field(name="Trade Details", value=self.trade_details.value, inline=False)
+        embed.add_field(name="Agreement", value=self.agreement.value, inline=False)
 
         embed.set_footer(text="Trade Market • Trusted MM Service")
 
-        await interaction.response.send_message(
+        await channel.send(
+            content=f"{interaction.user.mention}",
             embed=embed,
             view=TicketButtons()
+        )
+
+        await interaction.response.send_message(
+            f"Your ticket has been created: {channel.mention}",
+            ephemeral=True
         )
 
 
@@ -95,29 +118,21 @@ class TicketButtons(discord.ui.View):
     @discord.ui.button(label="Claim", style=discord.ButtonStyle.green)
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-        if self.claimer is not None:
-            await interaction.response.send_message(
-                "This ticket is already claimed.",
-                ephemeral=True
-            )
+        if self.claimer:
+            await interaction.response.send_message("Already claimed.", ephemeral=True)
             return
 
         self.claimer = interaction.user
         button.disabled = True
 
         await interaction.response.edit_message(view=self)
-        await interaction.followup.send(
-            f"{interaction.user.mention} claimed this ticket."
-        )
+        await interaction.channel.send(f"{interaction.user.mention} claimed this ticket.")
 
     @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red)
     async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-        if self.claimer != interaction.user:
-            await interaction.response.send_message(
-                "You didn't claim this ticket.",
-                ephemeral=True
-            )
+        if interaction.user != self.claimer:
+            await interaction.response.send_message("You didn't claim this.", ephemeral=True)
             return
 
         self.claimer = None
@@ -127,9 +142,7 @@ class TicketButtons(discord.ui.View):
                 item.disabled = False
 
         await interaction.response.edit_message(view=self)
-        await interaction.followup.send(
-            f"{interaction.user.mention} unclaimed this ticket."
-        )
+        await interaction.channel.send(f"{interaction.user.mention} unclaimed this ticket.")
 
 
 # ================= PANEL COMMAND =================
@@ -161,7 +174,6 @@ async def panel(ctx):
     await ctx.send(embed=embed, view=MMView())
 
 
-# ================= RUN BOT =================
+# ================= RUN =================
 
-import os
 bot.run(os.environ["TOKEN"])
