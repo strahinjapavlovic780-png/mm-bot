@@ -163,4 +163,5 @@ async def panel(ctx):
 
 # ================= RUN BOT =================
 
-bot.run("TOKEN")
+import os
+bot.run(os.environ["TOKEN"])
