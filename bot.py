@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import os
 
+mm.png
+fee.png
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -227,22 +229,17 @@ async def panel(ctx):
 
     await ctx.send(embed=embed, view=MMView())
 
+
 # ================= CLAIM / UNCLAIM =================
 
 @bot.command()
 async def claim(ctx):
-    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can claim tickets.")
-        return
     await ctx.send(f"🔒 {ctx.author.mention} claimed this ticket.")
 
 
 @bot.command()
 async def unclaim(ctx):
-    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can unclaim tickets.")
-        return
-    await ctx.send(f"{ctx.author.mention} unclaimed this ticket.")
+    await ctx.send(f"🔓 {ctx.author.mention} unclaimed this ticket.")
 
 
 # ================= HOW MM WORKS =================
@@ -353,6 +350,10 @@ class ConfirmView(discord.ui.View):
                 f"✅ {self.user1.mention} {self.user2.mention} have confirmed the trade!"
             )
 
+            for item in self.children:
+                item.disabled = True
+            await interaction.message.edit(view=self)
+
 
 @bot.command()
 async def confirm(ctx, user1: discord.Member, user2: discord.Member):
@@ -360,6 +361,7 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
         "Both users must click to confirm the trade.",
         view=ConfirmView(user1, user2)
     )
+
 
 # ================= FEE SYSTEM (UPGRADED) =================
 
