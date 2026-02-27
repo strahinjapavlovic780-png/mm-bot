@@ -8,7 +8,7 @@ intents.message_content = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 CATEGORY_NAME = "MM TICKETS"
 
@@ -401,7 +401,65 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
     embed.set_footer(text="TradeMarket | Secure Middleman Protection System")
 
     await ctx.send(embed=embed)
-    
+
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="📘 TradeMarket Bot Commands",
+        description="Here is a list of all available commands:",
+        color=discord.Color.purple()
+    )
+
+    embed.add_field(
+        name="🎟 Ticket System",
+        value=(
+            "`!panel` – Sends the Middleman ticket panel\n"
+            "`!close` – Closes the current ticket (MM only)\n"
+            "`!add @user` – Add user to ticket (MM only)\n"
+            "`!remove @user` – Remove user from ticket (MM only)"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🔒 Claim System",
+        value=(
+            "`Claim Button` – Claims ticket (MM role required)\n"
+            "`Unclaim Button` – Unclaims ticket"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="💰 Fee System",
+        value=(
+            "`!fee` – Sends fee agreement buttons\n"
+            "`50/50 Button` – Split fee equally\n"
+            "`100% Button` – One user pays full fee"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="✅ Trade Confirmation",
+        value="`!confirm @user1 @user2` – Official trade confirmation embed",
+        inline=False
+    )
+
+    embed.add_field(
+        name="ℹ Information",
+        value=(
+            "`!howmmworks` – Explains how middleman works\n"
+            "`!policy` – Shows compensation & scam policy"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="TradeMarket | Official Middleman System")
+
+    await ctx.send(embed=embed)
+        
+                
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
