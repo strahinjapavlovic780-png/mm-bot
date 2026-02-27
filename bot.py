@@ -435,4 +435,27 @@ async def fee(ctx):
 
     await ctx.send(embed=embed, view=FeeView())
 
-bot.run(os.environ["TOKEN"])
+from flask import Flask
+from threading import Thread
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is running"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
+    
+token = os.getenv("TOKEN")
+
+if not token:
+    raise ValueError("TOKEN environment variable is not set.")
+
+keep_alive()
+bot.run(token)
