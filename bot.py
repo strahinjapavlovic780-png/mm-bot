@@ -402,6 +402,15 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
 
     await ctx.send(embed=embed)
     
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user}")
+
+    # Persistent views (da dugmad rade i posle restarta)
+    bot.add_view(MMView())
+    bot.add_view(TicketButtons(None))
+    bot.add_view(FeeView(None))
+
 token = os.getenv("TOKEN")
 
 if not token:
