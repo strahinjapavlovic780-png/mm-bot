@@ -619,6 +619,20 @@ def is_mm():
     return commands.check(predicate)
 
 
+# ROLE ID (ostavi svoj pravi ID ovde)
+MM_ROLE_ID = 1477044901995872296
+
+vouches = {}
+
+def is_mm():
+    async def predicate(ctx):
+        if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+            await ctx.send("You are not allowed to use this command.")
+            return False
+        return True
+    return commands.check(predicate)
+
+
 @bot.command()
 @is_mm()
 async def addvouch(ctx, member: discord.Member, amount: int):
