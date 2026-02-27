@@ -16,6 +16,11 @@ MEMBER_ROLE_ID = 1477044929317437574
 MM_ROLE_ID = 1477044901995872296
 MERCY_ROLE_ID = 1477052539445837974
 
+# ================= STAFF CHECK =================
+
+def is_staff(member):
+    return MM_ROLE_ID in [role.id for role in member.roles]
+
 # ================= PANEL SELECT =================
 
 class MMSelect(discord.ui.Select):
