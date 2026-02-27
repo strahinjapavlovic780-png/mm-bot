@@ -508,6 +508,17 @@ async def help(ctx):
         inline=False
     )
 
+embed.add_field(
+    name="⭐ Vouch Commands",
+    value=(
+        "`!addvouch @user <amount>` - Add vouches\n"
+        "`!removevouch @user` - Remove all vouches\n"
+        "`!vouches [@user]` - Check vouches\n"
+        "`!vouch @user` - Add 1 vouch"
+    ),
+    inline=False
+)
+
     embed.set_footer(text="TradeMarket | Official Middleman System")
 
     await ctx.send(embed=embed)
@@ -589,7 +600,77 @@ async def mercy(ctx, member: discord.Member):
 
     await ctx.send(embed=small_embed)
     await ctx.send(embed=big_embed, view=MercyView(member))
+
+vouches = {}
+
+def is_mm():
+    async def predicate(ctx):
+        role = discord.utils.get(ctx.author.roles, name="MM")
+        if role is None:
+            await ctx.send("You are not allowed to use this command.")
+            return False
+        return True
+    return commands.check(predicate)
+
+
+@bot.command()
+@is_mm()
+async def addvouch(ctx, member: discord.Member, amount: int):
+    vouches[member.id] = vouches.get(member.id, 0) + amount
+
+    embed = discord.Embed(
+        description=f"{member.name} now has {vouches[member.id]} vouches.",
+        color=discord.Color.green()
+    )
+    embed.set_footer(text="TradeMarket Middleman Service")
+
+    await ctx.send(embed=embed)
+
+
+@bot.command()
+@is_mm()
+async def removevouch(ctx, member: discord.Member):
+    vouches[member.id] = 0
+
+    embed = discord.Embed(
+        description=f"All vouches removed from {member.name}.",
+        color=discord.Color.red()
+    )
+    embed.set_footer(text="TradeMarket Middleman Service")
+
+    await ctx.send(embed=embed)
+
+
+@bot.command()
+async def vouches(ctx, member: discord.Member = None):
+    if member is None:
+        member = ctx.author
+
+    count = vouches.get(member.id, 0)
+
+    embed = discord.Embed(
+        description=f"{member.name} currently has {count} vouches.",
+        color=discord.Color.green()
+    )
+    embed.set_footer(text="TradeMarket Middleman Service")
+
+    await ctx.send(embed=embed)
+
+
+@bot.command()
+@is_mm()
+async def vouch(ctx, member: discord.Member):
+    vouches[member.id] = vouches.get(member.id, 0) + 1
+
+    embed = discord.Embed(
+        description=f"{member.name} now has {vouches[member.id]} vouches.",
+        color=discord.Color.green()
+    )
+    embed.set_footer(text="TradeMarket Middleman Service")
+
+    await ctx.send(embed=embed)
                 
+                                                
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
