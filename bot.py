@@ -519,9 +519,8 @@ embed.add_field(
     inline=False
 )
 
-    embed.set_footer(text="TradeMarket | Official Middleman System")
-
-    await ctx.send(embed=embed)
+embed.set_footer(text="TradeMarket | Official Middleman System")
+await ctx.send(embed=embed)
 
 class MercyView(discord.ui.View):
     def __init__(self, target):
