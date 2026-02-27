@@ -14,7 +14,7 @@ CATEGORY_NAME = "MM TICKETS"
 
 MEMBER_ROLE_ID = 1477044929317437574
 MM_ROLE_ID = 1477044901995872296
-
+MERCY_ROLE_ID = 1477052539445837974
 
 # ================= PANEL SELECT =================
 
@@ -506,7 +506,84 @@ async def help(ctx):
     embed.set_footer(text="TradeMarket | Official Middleman System")
 
     await ctx.send(embed=embed)
-        
+
+class MercyView(discord.ui.View):
+    def __init__(self, target):
+        super().__init__(timeout=None)
+        self.target = target
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if interaction.user != self.target:
+            await interaction.response.send_message("This is not for you.", ephemeral=True)
+            return
+
+        role = interaction.guild.get_role(MERCY_ROLE_ID)
+        if role:
+            await interaction.user.add_roles(role)
+
+        embed = discord.Embed(
+            description=(
+                f"{interaction.user.mention} has accepted the offer!\n\n"
+                "**What now?**\n"
+                "– Check out and read all the staff channels carefully.\n"
+                "– Ask other staff for help or additional information if needed.\n\n"
+                "**Welcome to the team.**"
+            ),
+            color=discord.Color.green()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
+    async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if interaction.user != self.target:
+            await interaction.response.send_message("This is not for you.", ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            description=(
+                f"{interaction.user.mention} has declined the offer!\n\n"
+                "**What now?**\n"
+                "– Staff will determine your punishment soon.\n"
+                "– You will never be able to earn back what you lost.\n\n"
+                "**Bad luck, you are never going to earn anything back.**"
+            ),
+            color=discord.Color.red()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+@bot.command()
+async def mercy(ctx, member: discord.Member):
+
+    if not is_staff(ctx.author):
+        await ctx.send("Only Mercy Team can use this command.")
+        return
+
+    # 🔹 Manji embed (gornji)
+    small_embed = discord.Embed(
+        description=f"{member.mention} has received a staff offer!",
+        color=discord.Color.blue()
+    )
+
+    # 🔹 Veći embed (glavni)
+    big_embed = discord.Embed(
+        title="Staff Offer",
+        description=(
+            "You have been offered a position.\n\n"
+            "**What now?**\n"
+            "– Accept if you agree to join.\n"
+            "– Decline if you are not interested.\n\n"
+            "Please choose below."
+        ),
+        color=discord.Color.purple()
+    )
+
+    await ctx.send(embed=small_embed)
+    await ctx.send(embed=big_embed, view=MercyView(member))
                 
 @bot.event
 async def on_ready():
