@@ -1,87 +1,24 @@
-# ============================================================
-#                    FULL ADVANCED MM BOT
-#                  550+ LINES PROFESSIONAL
-# ============================================================
-
 import discord
 from discord.ext import commands
 import os
-import json
-from flask import Flask
-from threading import Thread
-from datetime import datetime
 
-# ============================================================
-#                         CONFIG
-# ============================================================
 
-TOKEN = os.getenv("TOKEN")
+
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+intents.members = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 CATEGORY_NAME = "MM TICKETS"
-LOG_CHANNEL_NAME = "mm-logs"
 
 MEMBER_ROLE_ID = 1476607658323607553
 MM_ROLE_ID = 1476607505365864488
 
-DATABASE_FILE = "database.json"
 
-# ============================================================
-#                       DATABASE SYSTEM
-# ============================================================
-
-def load_data():
-    if not os.path.exists(DATABASE_FILE):
-        with open(DATABASE_FILE, "w") as f:
-            json.dump({
-                "blacklist": [],
-                "mm_stats": {},
-                "ticket_count": 0
-            }, f)
-    with open(DATABASE_FILE, "r") as f:
-        return json.load(f)
-
-def save_data(data):
-    with open(DATABASE_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-data = load_data()
-
-# ============================================================
-#                      BOT INITIALIZATION
-# ============================================================
-
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-# ============================================================
-#                        READY EVENT
-# ============================================================
-
-@bot.event
-async def on_ready():
-    print(f"Logged in as {bot.user}")
-    bot.add_view(TicketButtons())
-    bot.add_view(FeeView())
-    bot.add_view(CloseConfirmView())
-    print("Persistent views loaded.")
-
-# ============================================================
-#                        ERROR HANDLER
-# ============================================================
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send("❌ You do not have permission to use this command.")
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("❌ Missing required argument.")
-    else:
-        await ctx.send("❌ An error occurred.")
-        raise error
-
-# ============================================================
-#                       TICKET PANEL
-# ============================================================
+# ================= PANEL SELECT =================
 
 class MMSelect(discord.ui.Select):
     def __init__(self):
@@ -90,6 +27,7 @@ class MMSelect(discord.ui.Select):
             discord.SelectOption(label="Crypto"),
             discord.SelectOption(label="Paypal"),
         ]
+
         super().__init__(
             placeholder="Select trade type below",
             min_values=1,
@@ -98,24 +36,16 @@ class MMSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-
-        if interaction.user.id in data["blacklist"]:
-            await interaction.response.send_message(
-                "❌ You are blacklisted from using this service.",
-                ephemeral=True
-            )
-            return
-
         await interaction.response.send_modal(MMModal(self.values[0]))
+
 
 class MMView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
 
-# ============================================================
-#                          MODAL
-# ============================================================
+
+# ================= MODAL =================
 
 class MMModal(discord.ui.Modal):
     def __init__(self, trade_type):
@@ -141,71 +71,89 @@ class MMModal(discord.ui.Modal):
         if category is None:
             category = await guild.create_category(CATEGORY_NAME)
 
-        data["ticket_count"] += 1
-        save_data(data)
+        mm_role = guild.get_role(MM_ROLE_ID)
+
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            interaction.user: discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            ),
+        }
+
+        if mm_role:
+            overwrites[mm_role] = discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            )
 
         channel = await guild.create_text_channel(
-            name=f"mm-{data['ticket_count']}",
-            category=category
+            name=f"mm-{interaction.user.name}",
+            category=category,
+            overwrites=overwrites
         )
 
-        embed = discord.Embed(
+        ticket_embed = discord.Embed(
             title="New Middleman Ticket",
             color=discord.Color.purple()
         )
 
-        embed.add_field(name="Trade Type", value=self.trade_type, inline=False)
-        embed.add_field(name="Other User", value=self.other_user.value, inline=False)
-        embed.add_field(name="Trade Details", value=self.trade_details.value, inline=False)
-        embed.add_field(name="Agreement", value=self.agreement.value, inline=False)
-        embed.timestamp = datetime.utcnow()
+        ticket_embed.add_field(name="Trade Type", value=self.trade_type, inline=False)
+        ticket_embed.add_field(name="Other User", value=self.other_user.value, inline=False)
+        ticket_embed.add_field(name="Trade Details", value=self.trade_details.value, inline=False)
+        ticket_embed.add_field(name="Agreement", value=self.agreement.value, inline=False)
 
         await channel.send(
-            content=f"{interaction.user.mention} <@&{MM_ROLE_ID}>",
-            embed=embed,
-            view=TicketButtons()
+            content=f"{interaction.user.mention}",
+            embed=ticket_embed,
+            view=TicketButtons(interaction.user)
         )
 
         await interaction.response.send_message(
-            f"✅ Your ticket has been created: {channel.mention}",
+            f"Your ticket has been created: {channel.mention}",
             ephemeral=True
         )
 
-# ============================================================
-#                       CLAIM SYSTEM
-# ============================================================
+
+# ================= CLAIM SYSTEM =================
 
 class TicketButtons(discord.ui.View):
-    def __init__(self):
+    def __init__(self, creator):
         super().__init__(timeout=None)
         self.claimer = None
+        self.creator = creator
 
     @discord.ui.button(label="Claim", style=discord.ButtonStyle.green)
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message("❌ Only MM team can claim.", ephemeral=True)
+            await interaction.response.send_message("Only MM team can claim.", ephemeral=True)
             return
 
         if self.claimer:
-            await interaction.response.send_message("❌ Already claimed.", ephemeral=True)
+            await interaction.response.send_message("Already claimed.", ephemeral=True)
             return
 
         self.claimer = interaction.user
         button.disabled = True
 
-        stats = data["mm_stats"]
-        stats[str(interaction.user.id)] = stats.get(str(interaction.user.id), 0) + 1
-        save_data(data)
+        await interaction.channel.set_permissions(
+            self.creator,
+            send_messages=False
+        )
 
         await interaction.response.edit_message(view=self)
-        await interaction.channel.send(f"🔒 **{interaction.user.mention} claimed this ticket.**")
+        await interaction.channel.send(f"🔒 {interaction.user.mention} claimed and locked this ticket.")
 
     @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red)
     async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
+        if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
+            await interaction.response.send_message("Only MM team can unclaim.", ephemeral=True)
+            return
+
         if interaction.user != self.claimer:
-            await interaction.response.send_message("❌ You didn't claim this.", ephemeral=True)
+            await interaction.response.send_message("You didn't claim this.", ephemeral=True)
             return
 
         self.claimer = None
@@ -214,87 +162,49 @@ class TicketButtons(discord.ui.View):
             if item.label == "Claim":
                 item.disabled = False
 
+        await interaction.channel.set_permissions(
+            self.creator,
+            send_messages=True
+        )
+
         await interaction.response.edit_message(view=self)
-        await interaction.channel.send("🔓 **Ticket unlocked.**")
+        await interaction.channel.send(f"{interaction.user.mention} unclaimed and unlocked the ticket.")
 
-# ============================================================
-#                       CLOSE SYSTEM
-# ============================================================
 
-class CloseConfirmView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=60)
+# ================= COMMANDS =================
 
-    @discord.ui.button(label="Confirm Close", style=discord.ButtonStyle.danger)
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+@bot.command()
+async def add(ctx, member: discord.Member):
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can add users.")
+        return
 
-        log_channel = discord.utils.get(interaction.guild.text_channels, name=LOG_CHANNEL_NAME)
-        if log_channel:
-            await log_channel.send(f"🗑 Ticket {interaction.channel.name} closed by {interaction.user.mention}")
+    await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+    await ctx.send(f"{member.mention} added to ticket.")
 
-        await interaction.channel.delete()
+
+@bot.command()
+async def remove(ctx, member: discord.Member):
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can remove users.")
+        return
+
+    await ctx.channel.set_permissions(member, overwrite=None)
+    await ctx.send(f"{member.mention} removed from ticket.")
+
 
 @bot.command()
 async def close(ctx):
-    await ctx.send(
-        "**Are you sure you want to close this ticket?**",
-        view=CloseConfirmView()
-    )
-
-# ============================================================
-#                       BLACKLIST SYSTEM
-# ============================================================
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def blacklist(ctx, member: discord.Member):
-    if member.id in data["blacklist"]:
-        await ctx.send("User already blacklisted.")
-        return
-    data["blacklist"].append(member.id)
-    save_data(data)
-    await ctx.send(f"🚫 **{member.mention} has been blacklisted.**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def unblacklist(ctx, member: discord.Member):
-    if member.id not in data["blacklist"]:
-        await ctx.send("User not blacklisted.")
-        return
-    data["blacklist"].remove(member.id)
-    save_data(data)
-    await ctx.send(f"✅ **{member.mention} removed from blacklist.**")
-
-# ============================================================
-#                       MM STATS
-# ============================================================
-
-@bot.command()
-async def mmstats(ctx):
-
-    if not data["mm_stats"]:
-        await ctx.send("No stats yet.")
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can close tickets.")
         return
 
-    embed = discord.Embed(
-        title="MM Claim Statistics",
-        color=discord.Color.gold()
-    )
+    await ctx.send("Closing ticket...")
+    await ctx.channel.delete()
 
-    sorted_stats = sorted(data["mm_stats"].items(), key=lambda x: x[1], reverse=True)
-
-    for user_id, count in sorted_stats:
-        user = await bot.fetch_user(int(user_id))
-        embed.add_field(name=user.name, value=f"Claims: **{count}**", inline=False)
-
-    await ctx.send(embed=embed)
-
-# ============================================================
-#                   ORIGINAL TEXT COMMANDS
-# ============================================================
 
 @bot.command()
-async def mmpanel(ctx):
+async def panel(ctx):
 
     embed = discord.Embed(
         title="Middleman Service",
@@ -319,46 +229,19 @@ async def mmpanel(ctx):
 
     await ctx.send(embed=embed, view=MMView())
 
+# ================= CLAIM / UNCLAIM =================
+
 @bot.command()
-async def policy(ctx):
+async def claim(ctx):
+    await ctx.send(f"🔒 {ctx.author.mention} claimed this ticket.")
 
-    embed = discord.Embed(
-        title="Middleman Accountability & Compensation Policy",
-        color=discord.Color.blue()
-    )
 
-    embed.add_field(
-        name="1. Middleman Responsibility",
-        value=(
-            "Official middlemen must remain neutral and handle all assets fairly. "
-            "Any misuse of authority or failure to return items is considered internal fraud."
-        ),
-        inline=False
-    )
+@bot.command()
+async def unclaim(ctx):
+    await ctx.send(f"🔓 {ctx.author.mention} unclaimed this ticket.")
 
-    embed.add_field(
-        name="2. If a Middleman Scams",
-        value=(
-            "• Both traders involved will receive full compensation equal to their losses.\n"
-            "• Compensation will be provided by the Executive Team.\n"
-            "• The middleman will be terminated from our MM team, blacklisted, and banned."
-        ),
-        inline=False
-    )
 
-    embed.add_field(
-        name="3. Compensation Requirements",
-        value=(
-            "• Trade must have taken place within our Official Discord MM Server.\n"
-            "• The middleman must have held the MM role at the time.\n"
-            "• Sufficient proof (screenshots or recordings) must be submitted."
-        ),
-        inline=False
-    )
-
-    embed.set_footer(text="TradeMarket | Middleman Service")
-
-    await ctx.send(embed=embed)
+# ================= HOW MM WORKS =================
 
 @bot.command()
 async def howmmworks(ctx):
@@ -380,21 +263,147 @@ async def howmmworks(ctx):
 
     await ctx.send(embed=embed)
 
-# ============================================================
-#                     FEE SYSTEM
-# ============================================================
+
+# ================= POLICY =================
+
+@bot.command()
+async def policy(ctx):
+
+    embed = discord.Embed(
+        title="Middleman Accountability & Compensation Policy",
+        color=discord.Color.blue()
+    )
+
+    embed.add_field(
+        name="1. Middleman Responsibility",
+        value=(
+            "Official middlemen must remain neutral and handle all assets fairly. "
+            "Any misuse of authority or failure to return items is considered internal fraud."
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="2. If a Middleman Scams",
+        value=(
+            "• Both traders will receive full compensation equal to their losses.\n"
+            "• Compensation is provided by the Executive Team.\n"
+            "• The middleman will be terminated, blacklisted, and permanently banned."
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="3. Compensation Requirements",
+        value=(
+            "• Trade must occur inside our official Discord server.\n"
+            "• The middleman must have had the MM role at the time.\n"
+            "• Valid proof (screenshots/recordings) must be provided.\n\n"
+            "**All official trades are fully protected under this policy.**"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="TradeMarket | Protection Guaranteed")
+
+    await ctx.send(embed=embed)
+
+
+# ================= CONFIRM SYSTEM =================
+
+class ConfirmView(discord.ui.View):
+    def __init__(self, user1, user2):
+        super().__init__(timeout=None)
+        self.user1 = user1
+        self.user2 = user2
+        self.confirmed = []
+
+    @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if interaction.user not in [self.user1, self.user2]:
+            await interaction.response.send_message("You are not part of this trade.", ephemeral=True)
+            return
+
+        if interaction.user in self.confirmed:
+            await interaction.response.send_message("You already confirmed.", ephemeral=True)
+            return
+
+        self.confirmed.append(interaction.user)
+        await interaction.response.send_message("You confirmed the trade.", ephemeral=True)
+
+        if len(self.confirmed) == 2:
+            await interaction.channel.send(
+                f"✅ {self.user1.mention} and {self.user2.mention} have confirmed the trade!"
+            )
+
+            for item in self.children:
+                item.disabled = True
+            await interaction.message.edit(view=self)
+
+
+@bot.command()
+async def confirm(ctx, user1: discord.Member, user2: discord.Member):
+    await ctx.send(
+        "Both users must click the button below to confirm the trade.",
+        view=ConfirmView(user1, user2)
+    )
+
+
+# ================= FEE SYSTEM =================
 
 class FeeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+        self.split_users = []
+        self.full_paid = False
 
     @discord.ui.button(label="50% / 50%", style=discord.ButtonStyle.blurple)
-    async def split(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("Both users will split the fee.", ephemeral=True)
+    async def split_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if interaction.user in self.split_users:
+            await interaction.response.send_message("You already selected 50%.", ephemeral=True)
+            return
+
+        if self.full_paid:
+            await interaction.response.send_message("100% option already selected.", ephemeral=True)
+            return
+
+        self.split_users.append(interaction.user)
+        await interaction.response.send_message("You selected to split the fee (50%).", ephemeral=True)
+
+        if len(self.split_users) == 2:
+            user1 = self.split_users[0]
+            user2 = self.split_users[1]
+
+            await interaction.channel.send(
+                f"💰 {user1.mention} and {user2.mention} will each pay 50% of the service fee."
+            )
+
+            for item in self.children:
+                item.disabled = True
+            await interaction.message.edit(view=self)
+
 
     @discord.ui.button(label="One Pays 100%", style=discord.ButtonStyle.red)
-    async def full(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("One user will pay full fee.", ephemeral=True)
+    async def full_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if self.full_paid:
+            await interaction.response.send_message("Fee option already selected.", ephemeral=True)
+            return
+
+        self.full_paid = True
+
+        await interaction.response.send_message("You selected to pay 100% of the fee.", ephemeral=True)
+
+        await interaction.channel.send(
+            f"💰 {interaction.user.mention} will pay 100% of the service fee."
+        )
+
+        for item in self.children:
+            item.disabled = True
+        await interaction.message.edit(view=self)
+
 
 @bot.command()
 async def fee(ctx):
@@ -426,9 +435,8 @@ async def fee(ctx):
 
     await ctx.send(embed=embed, view=FeeView())
 
-# ============================================================
-#                  RENDER KEEP ALIVE
-# ============================================================
+from flask import Flask
+from threading import Thread
 
 app = Flask(__name__)
 
@@ -436,14 +444,19 @@ app = Flask(__name__)
 def home():
     return "Bot is running"
 
-def run():
+def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-Thread(target=run).start()
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
+    
+token = os.getenv("TOKEN")
 
-# ============================================================
-#                        START BOT
-# ============================================================
+if not token:
+    raise ValueError("TOKEN environment variable is not set.")
 
-bot.run(TOKEN)
+keep_alive()
+bot.run(token)
+
