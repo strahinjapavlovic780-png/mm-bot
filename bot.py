@@ -3,8 +3,6 @@ from discord.ext import commands
 import os
 
 
-
-
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
@@ -81,6 +79,16 @@ class MMModal(discord.ui.Modal):
             ),
         }
 
+        # Dodavanje drugog usera po ID-u
+        try:
+            other_member = await guild.fetch_member(int(self.other_user.value))
+            overwrites[other_member] = discord.PermissionOverwrite(
+                view_channel=True,
+                send_messages=True
+            )
+        except:
+            other_member = None
+
         if mm_role:
             overwrites[mm_role] = discord.PermissionOverwrite(
                 view_channel=True,
@@ -88,7 +96,7 @@ class MMModal(discord.ui.Modal):
             )
 
         channel = await guild.create_text_channel(
-            name=f"mm-{interaction.user.name}",
+            name=f"mm-{interaction.user.id}",
             category=category,
             overwrites=overwrites
         )
@@ -229,17 +237,6 @@ async def panel(ctx):
 
     await ctx.send(embed=embed, view=MMView())
 
-# ================= CLAIM / UNCLAIM =================
-
-@bot.command()
-async def claim(ctx):
-    await ctx.send(f"🔒 {ctx.author.mention} claimed this ticket.")
-
-
-@bot.command()
-async def unclaim(ctx):
-    await ctx.send(f"🔓 {ctx.author.mention} unclaimed this ticket.")
-
 
 # ================= HOW MM WORKS =================
 
@@ -309,154 +306,17 @@ async def policy(ctx):
     await ctx.send(embed=embed)
 
 
-# ================= CONFIRM SYSTEM =================
+# ================= BOT READY =================
 
-class ConfirmView(discord.ui.View):
-    def __init__(self, user1, user2):
-        super().__init__(timeout=None)
-        self.user1 = user1
-        self.user2 = user2
-        self.confirmed = []
-
-    @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
-    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if interaction.user not in [self.user1, self.user2]:
-            await interaction.response.send_message("You are not part of this trade.", ephemeral=True)
-            return
-
-        if interaction.user in self.confirmed:
-            await interaction.response.send_message("You already confirmed.", ephemeral=True)
-            return
-
-        self.confirmed.append(interaction.user)
-        await interaction.response.send_message("You confirmed the trade.", ephemeral=True)
-
-        if len(self.confirmed) == 2:
-            await interaction.channel.send(
-                f"✅ {self.user1.mention} and {self.user2.mention} have confirmed the trade!"
-            )
-
-            for item in self.children:
-                item.disabled = True
-            await interaction.message.edit(view=self)
+@bot.event
+async def on_ready():
+    bot.add_view(MMView())
+    print(f"Logged in as {bot.user}")
 
 
-@bot.command()
-async def confirm(ctx, user1: discord.Member, user2: discord.Member):
-    await ctx.send(
-        "Both users must click the button below to confirm the trade.",
-        view=ConfirmView(user1, user2)
-    )
-
-
-# ================= FEE SYSTEM =================
-
-class FeeView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.split_users = []
-        self.full_paid = False
-
-    @discord.ui.button(label="50% / 50%", style=discord.ButtonStyle.blurple)
-    async def split_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if interaction.user in self.split_users:
-            await interaction.response.send_message("You already selected 50%.", ephemeral=True)
-            return
-
-        if self.full_paid:
-            await interaction.response.send_message("100% option already selected.", ephemeral=True)
-            return
-
-        self.split_users.append(interaction.user)
-        await interaction.response.send_message("You selected to split the fee (50%).", ephemeral=True)
-
-        if len(self.split_users) == 2:
-            user1 = self.split_users[0]
-            user2 = self.split_users[1]
-
-            await interaction.channel.send(
-                f"💰 {user1.mention} and {user2.mention} will each pay 50% of the service fee."
-            )
-
-            for item in self.children:
-                item.disabled = True
-            await interaction.message.edit(view=self)
-
-
-    @discord.ui.button(label="One Pays 100%", style=discord.ButtonStyle.red)
-    async def full_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if self.full_paid:
-            await interaction.response.send_message("Fee option already selected.", ephemeral=True)
-            return
-
-        self.full_paid = True
-
-        await interaction.response.send_message("You selected to pay 100% of the fee.", ephemeral=True)
-
-        await interaction.channel.send(
-            f"💰 {interaction.user.mention} will pay 100% of the service fee."
-        )
-
-        for item in self.children:
-            item.disabled = True
-        await interaction.message.edit(view=self)
-
-
-@bot.command()
-async def fee(ctx):
-
-    embed = discord.Embed(
-        title="Trade Fee Agreement",
-        description=(
-            "Before the trade proceeds, both parties must agree on how the service fee will be handled.\n\n"
-            "**Available Options:**\n"
-            "• 50% / 50% — Both users split the fee equally.\n"
-            "• One Pays 100% — One user covers the full service fee.\n\n"
-            "⚠ The trade cannot proceed until a fee option is selected.\n"
-            "⚠ Once selected, the decision is final.\n\n"
-            "This ensures transparency and prevents disputes."
-        ),
-        color=discord.Color.gold()
-    )
-
-    embed.add_field(
-        name="Why do we charge a fee?",
-        value=(
-            "The service fee compensates the middleman for securely holding assets, "
-            "verifying payments, and protecting both traders from scams."
-        ),
-        inline=False
-    )
-
-    embed.set_footer(text="TradeMarket | Secure & Professional")
-
-    await ctx.send(embed=embed, view=FeeView())
-
-from flask import Flask
-from threading import Thread
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot is running"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-def keep_alive():
-    t = Thread(target=run_web)
-    t.start()
-    
 token = os.getenv("TOKEN")
 
 if not token:
     raise ValueError("TOKEN environment variable is not set.")
 
-keep_alive()
 bot.run(token)
-
