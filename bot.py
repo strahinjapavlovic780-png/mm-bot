@@ -318,8 +318,51 @@ async def claim(ctx):
 
     await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")
 
-
 # ================= FEE SYSTEM =================
+
+class CustomFeeModal(discord.ui.Modal, title="Custom Fee Split"):
+
+    split = discord.ui.TextInput(
+        label="Enter split (example: 60-40)",
+        placeholder="Example: 70-30",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        try:
+            parts = self.split.value.replace(" ", "").split("-")
+            p1 = int(parts[0])
+            p2 = int(parts[1])
+
+            if p1 + p2 != 100:
+                await interaction.response.send_message(
+                    "Percentages must equal 100.",
+                    ephemeral=True
+                )
+                return
+
+        except:
+            await interaction.response.send_message(
+                "Invalid format. Use example: 60-40",
+                ephemeral=True
+            )
+            return
+
+        embed = discord.Embed(
+            title=f"Middleman Fee Agreement – {p1}/{p2} Split",
+            description=(
+                "Both traders have agreed to split the middleman fee equally.\n\n"
+                f"**User 1 will pay {p1}% of the fee.**\n"
+                f"**User 2 will pay {p2}% of the fee.**\n\n"
+                "This ensures fairness and equal responsibility between both parties.\n\n"
+                "Once payment is completed, the middleman will proceed with the secured transaction."
+            ),
+            color=discord.Color.gold()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
 
 class FeeView(discord.ui.View):
     def __init__(self, requester):
@@ -358,6 +401,10 @@ class FeeView(discord.ui.View):
 
         await interaction.response.send_message(embed=embed)
 
+    @discord.ui.button(label="Custom Split", style=discord.ButtonStyle.secondary)
+    async def custom_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(CustomFeeModal())
+
 
 @bot.command()
 async def fee(ctx):
@@ -367,7 +414,8 @@ async def fee(ctx):
             "To ensure transparency and fairness, all middleman transactions may include a service fee.\n\n"
             "Please choose how the fee will be handled for this trade:\n\n"
             "🔹 **50% / 50% Split** – Both users share the fee equally.\n"
-            "🔹 **100% One User Pays** – One trader covers the entire fee.\n\n"
+            "🔹 **100% One User Pays** – One trader covers the entire fee.\n"
+            "🔹 **Custom Split** – Choose your own percentage distribution.\n\n"
             "Click one of the buttons below to confirm how the fee will be paid."
         ),
         color=discord.Color.purple()
