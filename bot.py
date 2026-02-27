@@ -306,18 +306,7 @@ async def policy(ctx):
     await ctx.send(embed=embed)
 
 
-# ================= BOT READY =================
 
-@bot.event
-async def on_ready():
-    bot.add_view(MMView())
-    print(f"Logged in as {bot.user}")
-
-
-token = os.getenv("TOKEN")
-
-if not token:
-    raise ValueError("TOKEN environment variable is not set.")
 
 # ================= NEW CLAIM COMMAND =================
 
@@ -413,5 +402,9 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
 
     await ctx.send(embed=embed)
     
+token = os.getenv("TOKEN")
+
+if not token:
+    raise ValueError("TOKEN environment variable is not set.")
 
 bot.run(token)
