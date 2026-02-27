@@ -319,4 +319,99 @@ token = os.getenv("TOKEN")
 if not token:
     raise ValueError("TOKEN environment variable is not set.")
 
+# ================= NEW CLAIM COMMAND =================
+
+@bot.command()
+async def claim(ctx):
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        await ctx.send("Only MM team can claim tickets.")
+        return
+
+    await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")
+
+
+# ================= FEE SYSTEM =================
+
+class FeeView(discord.ui.View):
+    def __init__(self, requester):
+        super().__init__(timeout=None)
+        self.requester = requester
+
+    @discord.ui.button(label="50% / 50%", style=discord.ButtonStyle.primary)
+    async def split_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        embed = discord.Embed(
+            title="Middleman Fee Agreement – 50/50 Split",
+            description=(
+                "Both traders have agreed to split the middleman fee equally.\n\n"
+                "**Both users will pay 50% of the fee each.**\n\n"
+                "This ensures fairness and equal responsibility between both parties.\n\n"
+                "Once payment is completed, the middleman will proceed with the secured transaction."
+            ),
+            color=discord.Color.gold()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+    @discord.ui.button(label="100% One User Pays", style=discord.ButtonStyle.red)
+    async def full_fee(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        embed = discord.Embed(
+            title="Middleman Fee Agreement – Full Payment",
+            description=(
+                f"{interaction.user.mention} has agreed to cover the full middleman fee.\n\n"
+                f"**{interaction.user.mention} will pay 100% of the fees to the middleman.**\n\n"
+                "The second trader is not responsible for any service fee in this transaction.\n\n"
+                "Once the fee is confirmed, the trade will proceed under full protection."
+            ),
+            color=discord.Color.red()
+        )
+
+        await interaction.response.send_message(embed=embed)
+
+
+@bot.command()
+async def fee(ctx):
+    embed = discord.Embed(
+        title="Middleman Service Fee Confirmation",
+        description=(
+            "To ensure transparency and fairness, all middleman transactions may include a service fee.\n\n"
+            "Please choose how the fee will be handled for this trade:\n\n"
+            "🔹 **50% / 50% Split** – Both users share the fee equally.\n"
+            "🔹 **100% One User Pays** – One trader covers the entire fee.\n\n"
+            "Click one of the buttons below to confirm how the fee will be paid."
+        ),
+        color=discord.Color.purple()
+    )
+
+    await ctx.send(embed=embed, view=FeeView(ctx.author))
+
+
+# ================= CONFIRM SYSTEM =================
+
+@bot.command()
+async def confirm(ctx, user1: discord.Member, user2: discord.Member):
+    embed = discord.Embed(
+        title="Official Trade Confirmation",
+        description=(
+            "This trade has been officially confirmed under the supervision of our Middleman Team.\n\n"
+            "Both parties listed below have agreed to the full trade terms, conditions, "
+            "and fee structure associated with this transaction.\n\n"
+            "By confirming this trade, both users acknowledge that:\n"
+            "• The trade terms are final and mutually accepted.\n"
+            "• The middleman will securely hold and transfer assets.\n"
+            "• Any attempt of scam or chargeback will result in permanent ban.\n\n"
+            "The transaction is now protected and logged under our official policy system.\n\n"
+            "**Trade Protection Status: ACTIVE ✅**"
+        ),
+        color=discord.Color.green()
+    )
+
+    embed.add_field(name="Trader 1", value=user1.mention, inline=False)
+    embed.add_field(name="Trader 2", value=user2.mention, inline=False)
+    embed.set_footer(text="TradeMarket | Secure Middleman Protection System")
+
+    await ctx.send(embed=embed)
+    
+
 bot.run(token)
