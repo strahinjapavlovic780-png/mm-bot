@@ -459,68 +459,75 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
 async def help(ctx):
     embed = discord.Embed(
         title="📘 TradeMarket Bot Commands",
-        description="Here is a list of all available commands:",
+        description="Here is a list of all available commands",
         color=discord.Color.purple()
     )
 
+    # 🎟 Ticket System
     embed.add_field(
         name="🎟 Ticket System",
         value=(
-            "`!panel` – Sends the Middleman ticket panel\n"
-            "`!close` – Closes the current ticket (MM only)\n"
-            "`!add @user` – Add user to ticket (MM only)\n"
-            "`!remove @user` – Remove user from ticket (MM only)"
+            "`!panel` – Sends the Middleman panel\n"
+            "`!close` – Closes the current ticket\n"
+            "`!add @user` – Add user to ticket\n"
+            "`!remove @user` – Remove user from ticket"
         ),
         inline=False
     )
 
+    # 🔒 Claim System
     embed.add_field(
         name="🔒 Claim System",
         value=(
-            "`Claim Button` – Claims ticket (MM role required)\n"
+            "`Claim Button` – Claims ticket\n"
             "`Unclaim Button` – Unclaims ticket"
         ),
         inline=False
     )
 
+    # 💰 Fee System
     embed.add_field(
         name="💰 Fee System",
         value=(
-            "`!fee` – Sends fee agreement buttons\n"
-            "`50/50 Button` – Split fee equally\n"
+            "`!fee` – Sends fee agreement\n"
+            "`50/50 Button` – Split fee\n"
             "`100% Button` – One user pays full fee"
         ),
         inline=False
     )
 
+    # ✅ Trade Confirmation
     embed.add_field(
         name="✅ Trade Confirmation",
-        value="`!confirm @user1 @user2` – Official trade confirmation embed",
+        value="`!confirm @user1 @user2` – Confirms trade",
         inline=False
     )
 
+    # ℹ️ Information
     embed.add_field(
-        name="ℹ Information",
+        name="ℹ️ Information",
         value=(
-            "`!howmmworks` – Explains how middleman works\n"
-            "`!policy` – Shows compensation & scam policy"
+            "`!howmmworks` – Explains how MM works\n"
+            "`!policy` – Shows compensation policy"
         ),
         inline=False
     )
 
-embed.add_field(
-    name="⭐ Vouch Commands",
-    value=(
-        "`!addvouch @user <amount>` - Add vouches\n"
-        "`!removevouch @user` - Remove all vouches\n"
-        "`!vouches [@user]` - Check vouches\n"
-        "`!vouch @user` - Add 1 vouch"
-    ),
-    inline=False
-)
-    embed.set_footer(text="TradeMarket | Official Middleman Service")
-    await ctx.send(embed=embed)
+    # ⭐ Vouch Commands
+    embed.add_field(
+        name="⭐ Vouch Commands",
+        value=(
+            "`!addvouch @user <amount>` – Add vouches\n"
+            "`!removevouch @user` – Remove vouches\n"
+            "`!vouches [@user]` – Check vouches\n"
+            "`!vouch @user` – Add 1 vouch"
+        ),
+        inline=False
+    )
 
+    embed.set_footer(text="TradeMarket | Official Middleman Service")
+
+    await ctx.send(embed=embed)
 
 class MercyView(discord.ui.View):
     def __init__(self, target):
