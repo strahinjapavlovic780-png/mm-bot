@@ -764,8 +764,14 @@ async def mercy(ctx, member: discord.Member):
         title="Hitting Application",
         description=(
             f"{member.mention}, you have been selected.\n\n"
-            "You have **one minute** to respond.\n"
-            "**The decision is yours. Make it count.**"
+            "• **We regret to inform you that you have been scammed**, and we sincerely apologize for this unfortunate situation.
+**However, there is a way for you to recover** your losses and potentially earn 2x or even 100x if you're active.
+• **What is Hitting?**
+Hitting is where **you scam other people**, often using fake middlemans. You can **use our fake services** that we provide to scam others and get tons of items.
+**Choose if you want to start hitting with us now**.
+Please click **accept or decline to indicate your decision.**
+You have one minute to respond.
+**The decision is yours. Make it count.**"
         ),
         color=discord.Color.blue()
     )
