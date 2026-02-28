@@ -122,7 +122,7 @@ class MMModal(discord.ui.Modal):
 
         ticket_embed = discord.Embed(
             title="New Middleman Ticket",
-            color=discord.Color.purple()
+            color=discord.Color.blue()
         )
 
         ticket_embed.add_field(name="Trade Type", value=self.trade_type, inline=False)
@@ -247,7 +247,7 @@ async def panel(ctx):
         title="Middleman Service",
         description=(
             "Welcome to our middleman service centre.\n\n"
-            "At **Trade Market**, we provide a safe and secure way to exchange your goods, "
+            "At **Eneba**, we provide a safe and secure way to exchange your goods, "
             "whether it's in-game items, crypto or digital assets.\n\n"
             "Our trusted middleman team ensures that both parties receive exactly what they agreed upon "
             "with **zero risk of scams**.\n\n"
@@ -259,9 +259,9 @@ async def panel(ctx):
             "• Agree on the trade terms.\n"
             "• Click the dropdown below.\n"
             "• Wait for a staff member.\n\n"
-            "**Trade Market • Trusted Middleman Service**"
+            "**Eneba • Trusted Middleman Service**"
         ),
-        color=discord.Color.purple()
+        color=discord.Color.blue()
     )
 
     await ctx.send(embed=embed, view=MMView())
@@ -285,7 +285,7 @@ async def howmmworks(ctx):
         color=discord.Color.blue()
     )
 
-    embed.set_footer(text="TradeMarket | Official Middleman System")
+    embed.set_footer(text="Eneba | Official Middleman System")
 
     await ctx.send(embed=embed)
 
@@ -330,7 +330,7 @@ async def policy(ctx):
         inline=False
     )
 
-    embed.set_footer(text="TradeMarket | Protection Guaranteed")
+    embed.set_footer(text="Eneba | Protection Guaranteed")
 
     await ctx.send(embed=embed)
 
@@ -387,7 +387,7 @@ class CustomFeeModal(discord.ui.Modal, title="Custom Fee Split"):
                 "This ensures fairness and equal responsibility between both parties.\n\n"
                 "Once payment is completed, the middleman will proceed with the secured transaction."
             ),
-            color=discord.Color.gold()
+            color=discord.Color.blue()
         )
 
         await interaction.response.send_message(embed=embed)
@@ -409,7 +409,7 @@ class FeeView(discord.ui.View):
                 "This ensures fairness and equal responsibility between both parties.\n\n"
                 "Once payment is completed, the middleman will proceed with the secured transaction."
             ),
-            color=discord.Color.gold()
+            color=discord.Color.blue()
         )
 
         await interaction.response.send_message(embed=embed)
@@ -425,7 +425,7 @@ class FeeView(discord.ui.View):
                 "The second trader is not responsible for any service fee in this transaction.\n\n"
                 "Once the fee is confirmed, the trade will proceed under full protection."
             ),
-            color=discord.Color.red()
+            color=discord.Color.blue()
         )
 
         await interaction.response.send_message(embed=embed)
@@ -447,7 +447,7 @@ async def fee(ctx):
             "🔹 **Custom Split** – Choose your own percentage distribution.\n\n"
             "Click one of the buttons below to confirm how the fee will be paid."
         ),
-        color=discord.Color.purple()
+        color=discord.Color.blue()
     )
 
     await ctx.send(embed=embed, view=FeeView(ctx.author))
@@ -475,14 +475,14 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
 
     embed.add_field(name="Trader 1", value=user1.mention, inline=False)
     embed.add_field(name="Trader 2", value=user2.mention, inline=False)
-    embed.set_footer(text="TradeMarket | Secure Middleman Protection System")
+    embed.set_footer(text="Eneba | Secure Middleman Protection System")
 
     await ctx.send(embed=embed)
 
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(
-        title="📘 TradeMarket Bot Commands",
+        title="📘 Enebas Bot Commands",
         description="Here is a list of all available commands",
         color=discord.Color.purple()
     )
@@ -549,87 +549,10 @@ async def help(ctx):
         inline=False
     )
 
-    embed.set_footer(text="TradeMarket | Official Middleman Service")
+    embed.set_footer(text="Enebas | Official Middleman Service")
 
     await ctx.send(embed=embed)
 
-class MercyView(discord.ui.View):
-    def __init__(self, target):
-        super().__init__(timeout=None)
-        self.target = target
-
-    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
-    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if interaction.user != self.target:
-            await interaction.response.send_message("This is not for you.", ephemeral=True)
-            return
-
-        role = interaction.guild.get_role(MERCY_ROLE_ID)
-        if role:
-            await interaction.user.add_roles(role)
-
-        embed = discord.Embed(
-            description=(
-                f"{interaction.user.mention} has accepted the offer!\n\n"
-                "**What now?**\n"
-                "– Check out and read all the staff channels carefully.\n"
-                "– Ask other staff for help or additional information if needed.\n\n"
-                "**Welcome to the team.**"
-            ),
-            color=discord.Color.green()
-        )
-
-        await interaction.response.send_message(embed=embed)
-
-    @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
-    async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        if interaction.user != self.target:
-            await interaction.response.send_message("This is not for you.", ephemeral=True)
-            return
-
-        embed = discord.Embed(
-            description=(
-                f"{interaction.user.mention} has declined the offer!\n\n"
-                "**What now?**\n"
-                "– Staff will determine your punishment soon.\n"
-                "– You will never be able to earn back what you lost.\n\n"
-                "**Bad luck, you are never going to earn anything back.**"
-            ),
-            color=discord.Color.red()
-        )
-
-        await interaction.response.send_message(embed=embed)
-
-@bot.command()
-async def mercy(ctx, member: discord.Member):
-
-    if not is_staff(ctx.author):
-        await ctx.send("Only Mercy Team can use this command.")
-        return
-
-    # 🔹 Manji embed (gornji)
-    small_embed = discord.Embed(
-        description=f"{member.mention} has received a staff offer!",
-        color=discord.Color.blue()
-    )
-
-    # 🔹 Veći embed (glavni)
-    big_embed = discord.Embed(
-        title="Staff Offer",
-        description=(
-            "You have been offered a position.\n\n"
-            "**What now?**\n"
-            "– Accept if you agree to join.\n"
-            "– Decline if you are not interested.\n\n"
-            "Please choose below."
-        ),
-        color=discord.Color.purple()
-    )
-
-    await ctx.send(embed=small_embed)
-    await ctx.send(embed=big_embed, view=MercyView(member))
 
 vouches = {}
 
