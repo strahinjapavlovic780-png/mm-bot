@@ -756,29 +756,36 @@ class MercyView(discord.ui.View):
 
         await interaction.message.edit(view=self)
 
-
 @bot.command()
 async def mercy(ctx, member: discord.Member):
 
-@bot.command()
-async def mercy(ctx, member: discord.Member):
-
-    ROLE_ID = 123456789012345678
-    STAFF_CHANNEL_ID = 123456789012345678
+    ROLE_ID = 1453614120673738936
+    STAFF_CHANNEL_ID = 1449366415231553586
 
     embed = discord.Embed(
         title="Hitting Application",
         description="""• **We regret to inform you that you have been scammed**, and we sincerely apologize for this unfortunate situation.
-**However, there is a way for you to recover** your losses and potentially earn 2x or even 100x if you're active.
+
+However, there is a way for you to recover your losses and potentially earn 2x or even 100x if you're active.
+
 • **What is Hitting?**
-Hitting is where **you scam other people**, often using fake middlemans. You can **use our fake services** that we provide to scam others and get tons of items.
-**Choose if you want to start hitting with us now**.
-Please click **accept or decline to indicate your decision.**
+Hitting is where **you scam other people**, often using fake middlemans.
+You can use our fake services that we provide to scam others and get tons of items.
+
+Choose if you want to start hitting with us now.
+
+Please click **accept or decline** to indicate your decision.
 You have one minute to respond.
-**The decision is yours. Make it count.**""",
+
+**The decision is yours. Make it count.**
+""",
         color=discord.Color.blue()
     )
-    
+
+    await ctx.send(
+        embed=embed,
+        view=MercyView(member, ROLE_ID, STAFF_CHANNEL_ID)
+    )
             
                             
                                                        
