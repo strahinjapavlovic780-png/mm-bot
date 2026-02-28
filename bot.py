@@ -72,51 +72,43 @@ class MMModal(discord.ui.Modal):
         super().__init__(title="Middleman Request")
         self.trade_type = trade_type
 
-        self.other_user = discord.ui.TextInput(label="Other User (mention or ID)")
+        self.other_user = discord.ui.TextInput(
+            label="Other User (mention or ID)"
+        )
+
         self.trade_details = discord.ui.TextInput(
             label="Trade Details",
             style=discord.TextStyle.paragraph
         )
-        self.agreement = discord.ui.TextInput(label="Did both agree?")
+
+        self.agreement = discord.ui.TextInput(
+            label="Did both agree?"
+        )
 
         self.add_item(self.other_user)
         self.add_item(self.trade_details)
         self.add_item(self.agreement)
 
-    
+    async def on_submit(self, interaction: discord.Interaction):
 
-async def on_submit(self, interaction: discord.Interaction):
+        guild = interaction.guild
 
-    guild = interaction.guild
+        if TICKET_CATEGORY_ID is None:
+            return await interaction.response.send_message(
+                "❌ Ticket category is not set.",
+                ephemeral=True
+            )
 
-    if TICKET_CATEGORY_ID is None:
-        return await interaction.response.send_message(
-            "❌ Ticket category is not set.",
-            ephemeral=True
-        )
+        category = guild.get_channel(TICKET_CATEGORY_ID)
+        mm_role = guild.get_role(MM_ROLE_ID)
 
-    category = guild.get_channel(TICKET_CATEGORY_ID)
-    mm_role = guild.get_role(MM_ROLE_ID)
-    overwrites = {
-        guild.default_role: discord.PermissionOverwrite(view_channel=False),
-        interaction.user: discord.PermissionOverwrite(
-            view_channel=True,
-            send_messages=True
-        ),
-    }
-    
-
-        # SAFE USER PARSE
-        try:
-            user_id = int(self.other_user.value.replace("<@", "").replace(">", "").replace("!", ""))
-            other_member = await guild.fetch_member(user_id)
-
-            overwrites[other_member] = discord.PermissionOverwrite(
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            interaction.user: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True
-            )
-        except:
-            pass
+            ),
+        }
 
         if mm_role:
             overwrites[mm_role] = discord.PermissionOverwrite(
@@ -135,13 +127,32 @@ async def on_submit(self, interaction: discord.Interaction):
             color=discord.Color.blue()
         )
 
-        ticket_embed.add_field(name="Trade Type", value=self.trade_type, inline=False)
-        ticket_embed.add_field(name="Other User", value=self.other_user.value, inline=False)
-        ticket_embed.add_field(name="Trade Details", value=self.trade_details.value, inline=False)
-        ticket_embed.add_field(name="Agreement", value=self.agreement.value, inline=False)
+        ticket_embed.add_field(
+            name="Trade Type",
+            value=self.trade_type,
+            inline=False
+        )
+
+        ticket_embed.add_field(
+            name="Other User",
+            value=self.other_user.value,
+            inline=False
+        )
+
+        ticket_embed.add_field(
+            name="Trade Details",
+            value=self.trade_details.value,
+            inline=False
+        )
+
+        ticket_embed.add_field(
+            name="Agreement",
+            value=self.agreement.value,
+            inline=False
+        )
 
         await channel.send(
-            content=f"{interaction.user.mention}",
+            content=interaction.user.mention,
             embed=ticket_embed,
             view=TicketButtons(interaction.user)
         )
