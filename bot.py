@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 import os
-
+import json
+import os
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -9,6 +10,20 @@ intents.guilds = True
 intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+
+VOUCH_FILE = "vouches.json"
+
+if not os.path.exists(VOUCH_FILE):
+    with open(VOUCH_FILE, "w") as f:
+        json.dump({}, f)
+
+def load_vouches():
+    with open(VOUCH_FILE, "r") as f:
+        return json.load(f)
+
+def save_vouches(data):
+    with open(VOUCH_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
 CATEGORY_NAME = "MM TICKETS"
 
@@ -618,75 +633,92 @@ def is_mm():
         return True
     return commands.check(predicate)
 
-
-# ROLE ID (ostavi svoj pravi ID ovde)
-MM_ROLE_ID = 1477044901995872296
-
-vouches = {}
-
-def is_mm():
-    async def predicate(ctx):
-        if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-            await ctx.send("You are not allowed to use this command.")
-            return False
-        return True
-    return commands.check(predicate)
-
-
+# ------------------------
+# !addvouch <amount>
+# ------------------------
 @bot.command()
-@is_mm()
-async def addvouch(ctx, member: discord.Member, amount: int):
-    vouches[member.id] = vouches.get(member.id, 0) + amount
+async def addvouch(ctx, amount: int):
+    if amount <= 0:
+        return await ctx.send("❌ Please provide a valid positive number.")
+
+    vouches = load_vouches()
+    user_id = str(ctx.author.id)
+
+    vouches[user_id] = vouches.get(user_id, 0) + amount
+    save_vouches(vouches)
 
     embed = discord.Embed(
-        description=f"{member.name} now has {vouches[member.id]} vouches.",
+        title="⭐ Vouch Added",
+        description=f"{ctx.author.mention} now has **{vouches[user_id]}** vouches.",
         color=discord.Color.green()
     )
-    embed.set_footer(text="TradeMarket Middleman Service")
 
     await ctx.send(embed=embed)
 
 
+# ------------------------
+# !removevouch
+# ------------------------
 @bot.command()
-@is_mm()
-async def removevouch(ctx, member: discord.Member):
-    vouches[member.id] = 0
+async def removevouch(ctx):
+    vouches = load_vouches()
+    user_id = str(ctx.author.id)
+
+    vouches[user_id] = 0
+    save_vouches(vouches)
 
     embed = discord.Embed(
-        description=f"All vouches removed from {member.name}.",
+        title="🗑️ Vouches Removed",
+        description=f"{ctx.author.mention}, all your vouches have been reset to **0**.",
         color=discord.Color.red()
     )
-    embed.set_footer(text="TradeMarket Middleman Service")
 
     await ctx.send(embed=embed)
 
 
+# ------------------------
+# !vouches [@user]
+# ------------------------
 @bot.command()
 async def vouches(ctx, member: discord.Member = None):
     if member is None:
         member = ctx.author
 
-    count = vouches.get(member.id, 0)
+    vouches_data = load_vouches()
+    count = vouches_data.get(str(member.id), 0)
 
     embed = discord.Embed(
-        description=f"{member.name} currently has {count} vouches.",
+        title="⭐ Vouch Count",
+        description=f"{member.mention} currently has **{count}** vouches.",
         color=discord.Color.green()
     )
-    embed.set_footer(text="TradeMarket Middleman Service")
+
+    embed.set_thumbnail(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
 
 
+# ------------------------
+# !vouch @user
+# ------------------------
 @bot.command()
-@is_mm()
 async def vouch(ctx, member: discord.Member):
-    vouches[member.id] = vouches.get(member.id, 0) + 1
+    if member == ctx.author:
+        return await ctx.send("❌ You cannot vouch for yourself.")
+
+    vouches = load_vouches()
+    user_id = str(member.id)
+
+    vouches[user_id] = vouches.get(user_id, 0) + 1
+    save_vouches(vouches)
 
     embed = discord.Embed(
-        description=f"{member.name} now has {vouches[member.id]} vouches.",
+        title="⭐ New Vouch",
+        description=f"{ctx.author.mention} vouched for {member.mention}\n\nThey now have **{vouches[user_id]}** vouches.",
         color=discord.Color.green()
     )
-    embed.set_footer(text="TradeMarket Middleman Service")
+
+    embed.set_thumbnail(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
                 
