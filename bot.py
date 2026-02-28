@@ -31,7 +31,6 @@ MEMBER_ROLE_ID = 1449366374475497524
 FOUNDER_ROLE_ID = 1449366341822845011
 STAFF_CHANNEL_ID = 1449366415231553586
 MERCY_ROLE_ID = 1453614120673738936
-TICKET_CATEGORY_ID = None
 # ================= READY =================
 
 @bot.event
@@ -66,101 +65,85 @@ class MMView(discord.ui.View):
         self.add_item(MMSelect())
 
 # ================= MODAL =================
+async def on_submit(self, interaction: discord.Interaction):
 
-class MMModal(discord.ui.Modal):
-    def __init__(self, trade_type):
-        super().__init__(title="Middleman Request")
-        self.trade_type = trade_type
+    guild = interaction.guild
 
-        self.other_user = discord.ui.TextInput(
-            label="Other User (mention or ID)"
-        )
+    global TICKET_CATEGORY_ID
 
-        self.trade_details = discord.ui.TextInput(
-            label="Trade Details",
-            style=discord.TextStyle.paragraph
-        )
-
-        self.agreement = discord.ui.TextInput(
-            label="Did both agree?"
-        )
-
-        self.add_item(self.other_user)
-        self.add_item(self.trade_details)
-        self.add_item(self.agreement)
-
-    async def on_submit(self, interaction: discord.Interaction):
-
-        guild = interaction.guild
-
-        if TICKET_CATEGORY_ID is None:
-            return await interaction.response.send_message(
-                "❌ Ticket category is not set.",
-                ephemeral=True
-            )
-
+    # Ako category nije setovan - napravi novu
+    if TICKET_CATEGORY_ID is None:
+        category = await guild.create_category("MM Tickets")
+        TICKET_CATEGORY_ID = category.id
+    else:
         category = guild.get_channel(TICKET_CATEGORY_ID)
-        mm_role = guild.get_role(MM_ROLE_ID)
 
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            interaction.user: discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True
-            ),
-        }
+        # Ako ID postoji ali je category obrisana
+        if category is None:
+            category = await guild.create_category("MM Tickets")
+            TICKET_CATEGORY_ID = category.id
 
-        if mm_role:
-            overwrites[mm_role] = discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True
-            )
+    mm_role = guild.get_role(MM_ROLE_ID)
 
-        channel = await guild.create_text_channel(
-            name=f"mm-{interaction.user.name}".lower().replace(" ", "-"),
-            category=category,
-            overwrites=overwrites
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        interaction.user: discord.PermissionOverwrite(
+            view_channel=True,
+            send_messages=True
+        ),
+    }
+
+    if mm_role:
+        overwrites[mm_role] = discord.PermissionOverwrite(
+            view_channel=True,
+            send_messages=True
         )
 
-        ticket_embed = discord.Embed(
-            title="New Middleman Ticket",
-            color=discord.Color.blue()
-        )
+    channel = await guild.create_text_channel(
+        name=f"mm-{interaction.user.name}".lower().replace(" ", "-"),
+        category=category,
+        overwrites=overwrites
+    )
 
-        ticket_embed.add_field(
-            name="Trade Type",
-            value=self.trade_type,
-            inline=False
-        )
+    ticket_embed = discord.Embed(
+        title="New Middleman Ticket",
+        color=discord.Color.blue()
+    )
 
-        ticket_embed.add_field(
-            name="Other User",
-            value=self.other_user.value,
-            inline=False
-        )
+    ticket_embed.add_field(
+        name="Trade Type",
+        value=self.trade_type,
+        inline=False
+    )
 
-        ticket_embed.add_field(
-            name="Trade Details",
-            value=self.trade_details.value,
-            inline=False
-        )
+    ticket_embed.add_field(
+        name="Other User",
+        value=self.other_user.value,
+        inline=False
+    )
 
-        ticket_embed.add_field(
-            name="Agreement",
-            value=self.agreement.value,
-            inline=False
-        )
+    ticket_embed.add_field(
+        name="Trade Details",
+        value=self.trade_details.value,
+        inline=False
+    )
 
-        await channel.send(
-            content=interaction.user.mention,
-            embed=ticket_embed,
-            view=TicketButtons(interaction.user)
-        )
+    ticket_embed.add_field(
+        name="Agreement",
+        value=self.agreement.value,
+        inline=False
+    )
 
-        await interaction.response.send_message(
-            f"Your ticket has been created: {channel.mention}",
-            ephemeral=True
-        )
+    await channel.send(
+        content=interaction.user.mention,
+        embed=ticket_embed,
+        view=TicketButtons(interaction.user)
+    )
+
+    await interaction.response.send_message(
+        f"Your ticket has been created: {channel.mention}",
+        ephemeral=True
+    )
 
 # ================= BUTTONS =================
 
