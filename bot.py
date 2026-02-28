@@ -605,35 +605,37 @@ embed.add_field(
 
     await ctx.send(embed=embed)
 
-
 vouches = {}
 
 def is_mm():
     async def predicate(ctx):
         role = discord.utils.get(ctx.author.roles, name="MM")
         if role is None:
-            await ctx.send("You are not allowed to use this command.")
+            await ctx.send("❌ You are not allowed to use this command.")
             return False
         return True
     return commands.check(predicate)
 
+
 # ------------------------
-# !addvouch <amount>
+# !addvouch @user <amount> (MM ONLY)
 # ------------------------
 @bot.command()
-async def addvouch(ctx, amount: int):
+@is_mm()
+async def addvouch(ctx, member: discord.Member, amount: int):
+
     if amount <= 0:
         return await ctx.send("❌ Please provide a valid positive number.")
 
-    vouches = load_vouches()
-    user_id = str(ctx.author.id)
+    vouches_data = load_vouches()
+    user_id = str(member.id)
 
-    vouches[user_id] = vouches.get(user_id, 0) + amount
-    save_vouches(vouches)
+    vouches_data[user_id] = vouches_data.get(user_id, 0) + amount
+    save_vouches(vouches_data)
 
     embed = discord.Embed(
         title="⭐ Vouch Added",
-        description=f"{ctx.author.mention} now has **{vouches[user_id]}** vouches.",
+        description=f"{member.mention} now has **{vouches_data[user_id]}** vouches.",
         color=discord.Color.green()
     )
 
@@ -641,19 +643,21 @@ async def addvouch(ctx, amount: int):
 
 
 # ------------------------
-# !removevouch
+# !removevouch @user (MM ONLY)
 # ------------------------
 @bot.command()
-async def removevouch(ctx):
-    vouches = load_vouches()
-    user_id = str(ctx.author.id)
+@is_mm()
+async def removevouch(ctx, member: discord.Member):
 
-    vouches[user_id] = 0
-    save_vouches(vouches)
+    vouches_data = load_vouches()
+    user_id = str(member.id)
+
+    vouches_data[user_id] = 0
+    save_vouches(vouches_data)
 
     embed = discord.Embed(
         title="🗑️ Vouches Removed",
-        description=f"{ctx.author.mention}, all your vouches have been reset to **0**.",
+        description=f"{member.mention}'s vouches have been reset to **0**.",
         color=discord.Color.red()
     )
 
@@ -661,10 +665,12 @@ async def removevouch(ctx):
 
 
 # ------------------------
-# !vouches [@user]
+# !vouches [@user] (MM ONLY)
 # ------------------------
 @bot.command()
+@is_mm()
 async def vouches(ctx, member: discord.Member = None):
+
     if member is None:
         member = ctx.author
 
@@ -683,28 +689,30 @@ async def vouches(ctx, member: discord.Member = None):
 
 
 # ------------------------
-# !vouch @user
+# !vouch @user (EVERYONE)
 # ------------------------
 @bot.command()
 async def vouch(ctx, member: discord.Member):
+
     if member == ctx.author:
         return await ctx.send("❌ You cannot vouch for yourself.")
 
-    vouches = load_vouches()
+    vouches_data = load_vouches()
     user_id = str(member.id)
 
-    vouches[user_id] = vouches.get(user_id, 0) + 1
-    save_vouches(vouches)
+    vouches_data[user_id] = vouches_data.get(user_id, 0) + 1
+    save_vouches(vouches_data)
 
     embed = discord.Embed(
         title="⭐ New Vouch",
-        description=f"{ctx.author.mention} vouched for {member.mention}\n\nThey now have **{vouches[user_id]}** vouches.",
+        description=f"{ctx.author.mention} vouched for {member.mention}\n\nThey now have **{vouches_data[user_id]}** vouches.",
         color=discord.Color.green()
     )
 
     embed.set_thumbnail(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
+
  
 class MercyView(discord.ui.View):
     def __init__(self, target: discord.Member):
