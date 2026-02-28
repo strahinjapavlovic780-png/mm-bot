@@ -601,9 +601,9 @@ embed.add_field(
     inline=False
 )
 
-    embed.set_footer(text="Enebas | Official Middleman Service")
+embed.set_footer(text="Enebas | Official")
 
-    await ctx.send(embed=embed)
+await ctx.send(embed=embed)
 
 vouches = {}
 
