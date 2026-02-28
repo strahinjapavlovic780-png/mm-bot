@@ -24,7 +24,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
-CATEGORY_NAME = "══「 🎫 TICKETS 」══"
+
 
 MM_ROLE_ID = 1449366378732589107
 MEMBER_ROLE_ID = 1449366374475497524
