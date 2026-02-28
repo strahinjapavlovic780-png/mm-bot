@@ -41,9 +41,9 @@ def is_staff(member):
 class MMSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="In Game Items"),
-            discord.SelectOption(label="Crypto"),
-            discord.SelectOption(label="Paypal"),
+            discord.SelectOption(label="🎮In Game Items"),
+            discord.SelectOption(label="🪙Crypto"),
+            discord.SelectOption(label="💳Paypal"),
         ]
 
         super().__init__(
