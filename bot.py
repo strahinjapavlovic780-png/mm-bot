@@ -29,6 +29,8 @@ CATEGORY_NAME = "══「 🎫 TICKETS 」══"
 MM_ROLE_ID = 1449366378732589107
 MEMBER_ROLE_ID = 1449366374475497524
 FOUNDER_ROLE_ID = 1449366341822845011
+STAFF_CHANNEL_ID = 1449366415231553586
+MERCY_ROLE_ID = 
 # ================= READY =================
 
 @bot.event
@@ -677,7 +679,101 @@ async def vouch(ctx, member: discord.Member):
     embed.set_thumbnail(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
-                
+ 
+class MercyView(discord.ui.View):
+    def __init__(self, target: discord.Member):
+        super().__init__(timeout=60)
+        self.target = target
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id != self.target.id:
+            await interaction.response.send_message(
+                "❌ You are not allowed to respond to this.",
+                ephemeral=True
+            )
+            return False
+        return True
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green)
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        role = interaction.guild.get_role(MERCY_ROLE_ID)
+        staff_channel = interaction.guild.get_channel(STAFF_CHANNEL_ID)
+
+        if role:
+            await self.target.add_roles(role)
+
+        accept_embed = discord.Embed(
+            description=(
+                f"**{self.target.mention} has accepted the offer!**\n\n"
+                "**What now?**\n"
+                "▸ Check out and read all the staff channels carefully.\n"
+                "▸ Once you have read them check your DMs for further guide.\n"
+                "▸ Ask other staff for help if needed.\n\n"
+                "**Start earning now!**"
+            ),
+            color=discord.Color.gold()
+        )
+
+        await interaction.channel.send(embed=accept_embed)
+
+        if staff_channel:
+            await staff_channel.send(embed=accept_embed)
+
+        await interaction.response.send_message(
+            "✅ Offer accepted.",
+            ephemeral=True
+        )
+
+        for item in self.children:
+            item.disabled = True
+
+        await interaction.message.edit(view=self)
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.red)
+    async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        decline_embed = discord.Embed(
+            description=(
+                f"**{self.target.mention} has declined the offer!**\n\n"
+                "**What now?**\n"
+                "▸ Staff will review the situation.\n"
+                "▸ You will not receive access to the Mercy program.\n\n"
+                "**Decision recorded.**"
+            ),
+            color=discord.Color.gold()
+        )
+
+        await interaction.channel.send(embed=decline_embed)
+
+        await interaction.response.send_message(
+            "❌ Offer declined.",
+            ephemeral=True
+        )
+
+        for item in self.children:
+            item.disabled = True
+
+        await interaction.message.edit(view=self)
+
+
+@bot.command()
+async def mercy(ctx, member: discord.Member):
+
+    embed = discord.Embed(
+        title="Hitting Application",
+        description=(
+            f"{member.mention}, you have been selected.\n\n"
+            "You have **one minute** to respond.\n"
+            "**The decision is yours. Make it count.**"
+        ),
+        color=discord.Color.blue()
+    )
+
+    await ctx.send(embed=embed, view=MercyView(member))
+            
+                            
+                                                       
                                                 
 @bot.event
 async def on_ready():
