@@ -30,7 +30,15 @@ MEMBER_ROLE_ID = 1477044929317437574
 FOUNDER_ROLE_ID = 1477044826183831674
 STAFF_CHANNEL_ID = 1477066991519924395
 MERCY_ROLE_ID = 1477052539445837974
+TICKET_CATEGORY_ID = None
 
+def is_mm():
+    async def predicate(ctx):
+        if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+            await ctx.send("❌ You are not allowed to use this command.")
+            return False
+        return True
+    return commands.check(predicate)
 # ================= READY =================
 
 @bot.event
@@ -589,13 +597,11 @@ async def help(ctx):
 
     await ctx.send(embed=embed)
 
-
 vouches = {}
 
 def is_mm():
     async def predicate(ctx):
-        role = discord.utils.get(ctx.author.roles, name="MM")
-        if role is None:
+        if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
             await ctx.send("❌ You are not allowed to use this command.")
             return False
         return True
