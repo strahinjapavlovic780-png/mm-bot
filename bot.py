@@ -783,11 +783,7 @@ async def mercy(ctx, member: discord.Member):
         title="Hitting Application",
         description="""• **We regret to inform you that you have been scammed**, and we sincerely apologize for this unfortunate situation.
 
-    mm_role = ctx.guild.get_role(MM_ROLE_ID)
-
-    if not mm_role or mm_role not in ctx.author.roles:
-        return await ctx.send("❌ Only Middleman can use this command.")
-
+    
 However, there is a way for you to recover your losses and potentially earn 2x or even 100x if you're active.
 
 • **What is Hitting?**
