@@ -779,7 +779,7 @@ You have one minute to respond.
 """,
         color=discord.Color.blue()
     )
-await ctx.send(
+    await ctx.send(
     embed=embed,
     view=MercyView(member)
 )
