@@ -39,12 +39,6 @@ def is_mm():
             return False
         return True
     return commands.check(predicate)
-# ================= READY =================
-
-@bot.event
-async def on_ready():
-    bot.add_view(MMView())
-    print(f"Logged in as {bot.user}")
 
 # ================= PANEL SELECT =================
 
@@ -845,8 +839,7 @@ async def on_ready():
 
     # Persistent views (da dugmad rade i posle restarta)
     bot.add_view(MMView())
-    bot.add_view(TicketButtons(None))
-    bot.add_view(FeeView(None))
+    
 
 token = os.getenv("TOKEN")
 
