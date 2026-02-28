@@ -83,9 +83,7 @@ class MMModal(discord.ui.Modal):
         self.add_item(self.trade_details)
         self.add_item(self.agreement)
 
-    async def on_submit(self, interaction: discord.Interaction):
-
-        guild = interaction.guild
+    
 
 async def on_submit(self, interaction: discord.Interaction):
 
