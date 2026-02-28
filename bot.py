@@ -587,23 +587,25 @@ async def help(ctx):
     embed.add_field(
         name="⭐ Vouch Commands",
         value=(
-            "`!addvouch @user <amount>` – Add vouches\n"
-            "`!removevouch @user` – Remove vouches\n"
-            "`!vouches [@user]` – Check vouches\n"
+            "`!addvouch @user <amount>` – Add vouches (MM ONLY)\n"
+            "`!removevouch @user` – Remove vouches (MM ONLY)\n"
+            "`!vouches [@user]` – Check vouches (MM ONLY)\n"
             "`!vouch @user` – Add 1 vouch"
         ),
         inline=False
     )
 
-embed.add_field(
-    name="!mercy @user",
-    value="Offer mercy to a user.",
-    inline=False
-)
+    # ⚖️ Mercy
+    embed.add_field(
+        name="⚖️ Mercy",
+        value="`!mercy @user` – Offer mercy to a user (MM ONLY)",
+        inline=False
+    )
 
-embed.set_footer(text="Enebas | Official")
+    embed.set_footer(text="Enebas | Official")
 
-await ctx.send(embed=embed)
+    await ctx.send(embed=embed)
+
 
 vouches = {}
 
