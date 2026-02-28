@@ -595,6 +595,12 @@ async def help(ctx):
         inline=False
     )
 
+embed.add_field(
+    name="!mercy @user",
+    value="Offer mercy to a user.",
+    inline=False
+)
+
     embed.set_footer(text="Enebas | Official Middleman Service")
 
     await ctx.send(embed=embed)
