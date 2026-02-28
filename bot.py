@@ -274,13 +274,46 @@ async def howmmworks(ctx):
     embed = discord.Embed(
         title="How a Middleman Works",
         description=(
-            "A middleman is a trusted third party who ensures both sides of a trade "
-            "are protected and that the transaction is completed safely.\n\n"
-            "**Step 1:** Seller gives the item to the middleman.\n"
-            "**Step 2:** Buyer sends the payment.\n"
-            "**Step 3:** Middleman verifies payment and releases the item.\n\n"
-            "This process protects both parties from scams and fraud."
-        ),
+"🔐 **How Eneba's Middleman Service Works**\n\n"
+
+"Welcome to **Eneba's Middleman Service**, where your trades are handled with "
+"**maximum security, transparency, and professionalism**.\n\n"
+
+"━━━━━━━━━━━━━━━━━━━━━━\n"
+"🛡️ **Why Use a Middleman?**\n"
+"A middleman protects both parties during a trade. Instead of trusting a stranger, "
+"both users trust our verified MM team.\n\n"
+
+"With our service:\n"
+"• 🚫 No scams\n"
+"• 🔒 No risk of chargebacks\n"
+"• 🤝 Fair trade guarantee\n"
+"• 📜 Proof and documentation of the deal\n\n"
+
+"━━━━━━━━━━━━━━━━━━━━━━\n"
+"📩 **Step-By-Step Process**\n"
+"1️⃣ Both users agree on the trade terms.\n"
+"2️⃣ Open a ticket and select the trade type.\n"
+"3️⃣ Provide clear trade details inside the ticket.\n"
+"4️⃣ An official MM team member will claim the ticket.\n"
+"5️⃣ The buyer sends the payment/item to the MM.\n"
+"6️⃣ After confirmation, the seller delivers their part.\n"
+"7️⃣ Once both sides confirm, the MM safely releases the assets.\n\n"
+
+"━━━━━━━━━━━━━━━━━━━━━━\n"
+"⚖️ **Important Rules**\n"
+"• Both parties must clearly confirm the agreement.\n"
+"• Do NOT send anything outside the ticket.\n"
+"• Only trust MM members with the official role.\n"
+"• Large trades may include a small service fee.\n\n"
+
+"━━━━━━━━━━━━━━━━━━━━━━\n"
+"🌟 **Eneba's Middleman Service Guarantee**\n"
+"We ensure a **secure, neutral, and protected environment** for every trade.\n"
+"Our reputation is built on **trust, safety, and successful transactions**.\n\n"
+
+"💜 Trade safely. Trade smart. Trade with confidence."
+)
         color=discord.Color.blue()
     )
 
