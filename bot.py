@@ -2,14 +2,6 @@ import discord
 from discord.ext import commands
 import os
 import json
-import os
-
-intents = discord.Intents.default()
-intents.message_content = True
-intents.guilds = True
-intents.members = True
-
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 VOUCH_FILE = "vouches.json"
 
@@ -25,16 +17,24 @@ def save_vouches(data):
     with open(VOUCH_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+intents.members = True
+
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+
 CATEGORY_NAME = "MM TICKETS"
 
-MEMBER_ROLE_ID = 1477044929317437574
 MM_ROLE_ID = 1477044901995872296
 MERCY_ROLE_ID = 1477052539445837974
+MEMBER_ROLE_ID = 1477044929317437574
+# ================= READY =================
 
-# ================= STAFF CHECK =================
-
-def is_staff(member):
-    return MM_ROLE_ID in [role.id for role in member.roles]
+@bot.event
+async def on_ready():
+    bot.add_view(MMView())
+    print(f"Logged in as {bot.user}")
 
 # ================= PANEL SELECT =================
 
@@ -62,7 +62,6 @@ class MMView(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(MMSelect())
 
-
 # ================= MODAL =================
 
 class MMModal(discord.ui.Modal):
@@ -70,7 +69,7 @@ class MMModal(discord.ui.Modal):
         super().__init__(title="Middleman Request")
         self.trade_type = trade_type
 
-        self.other_user = discord.ui.TextInput(label="Other User")
+        self.other_user = discord.ui.TextInput(label="Other User (mention or ID)")
         self.trade_details = discord.ui.TextInput(
             label="Trade Details",
             style=discord.TextStyle.paragraph
@@ -93,21 +92,20 @@ class MMModal(discord.ui.Modal):
 
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            interaction.user: discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True
-            ),
+            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
         }
 
-        # Dodavanje drugog usera po ID-u
+        # SAFE USER PARSE
         try:
-            other_member = await guild.fetch_member(int(self.other_user.value))
+            user_id = int(self.other_user.value.replace("<@", "").replace(">", "").replace("!", ""))
+            other_member = await guild.fetch_member(user_id)
+
             overwrites[other_member] = discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True
             )
         except:
-            other_member = None
+            pass
 
         if mm_role:
             overwrites[mm_role] = discord.PermissionOverwrite(
@@ -116,7 +114,7 @@ class MMModal(discord.ui.Modal):
             )
 
         channel = await guild.create_text_channel(
-            name=f"mm-{interaction.user.id}",
+            name=f"mm-{interaction.user.name}".lower().replace(" ", "-"),
             category=category,
             overwrites=overwrites
         )
@@ -142,94 +140,104 @@ class MMModal(discord.ui.Modal):
             ephemeral=True
         )
 
-
-# ================= CLAIM SYSTEM =================
+# ================= BUTTONS =================
 
 class TicketButtons(discord.ui.View):
     def __init__(self, creator):
         super().__init__(timeout=None)
-        self.claimer = None
         self.creator = creator
+        self.claimer = None
 
     @discord.ui.button(label="Claim", style=discord.ButtonStyle.green)
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message("Only MM team can claim.", ephemeral=True)
-            return
+            return await interaction.response.send_message(
+                "Only MM team can claim tickets.",
+                ephemeral=True
+            )
 
         if self.claimer:
-            await interaction.response.send_message("Already claimed.", ephemeral=True)
-            return
+            return await interaction.response.send_message(
+                "Ticket already claimed.",
+                ephemeral=True
+            )
 
         self.claimer = interaction.user
         button.disabled = True
 
-        await interaction.channel.set_permissions(
-            self.creator,
-            send_messages=False
+        await interaction.response.edit_message(view=self)
+        await interaction.channel.send(
+            f"🔒 {interaction.user.mention} claimed this ticket."
         )
 
-        await interaction.response.edit_message(view=self)
-        await interaction.channel.send(f"🔒 {interaction.user.mention} claimed and locked this ticket.")
-
-    @discord.ui.button(label="Unclaim", style=discord.ButtonStyle.red)
-    async def unclaim(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="Add User", style=discord.ButtonStyle.blurple)
+    async def add_user_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message("Only MM team can unclaim.", ephemeral=True)
-            return
+            return await interaction.response.send_message(
+                "Only MM team can use this.",
+                ephemeral=True
+            )
 
-        if interaction.user != self.claimer:
-            await interaction.response.send_message("You didn't claim this.", ephemeral=True)
-            return
-
-        self.claimer = None
-
-        for item in self.children:
-            if item.label == "Claim":
-                item.disabled = False
-
-        await interaction.channel.set_permissions(
-            self.creator,
-            send_messages=True
+        await interaction.response.send_message(
+            "Use command: `!add @user`",
+            ephemeral=True
         )
 
-        await interaction.response.edit_message(view=self)
-        await interaction.channel.send(f"{interaction.user.mention} unclaimed and unlocked the ticket.")
+    @discord.ui.button(label="Remove User", style=discord.ButtonStyle.gray)
+    async def remove_user_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
 
+        if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
+            return await interaction.response.send_message(
+                "Only MM team can use this.",
+                ephemeral=True
+            )
+
+        await interaction.response.send_message(
+            "Use command: `!remove @user`",
+            ephemeral=True
+        )
+
+    @discord.ui.button(label="Close", style=discord.ButtonStyle.red)
+    async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if MM_ROLE_ID not in [role.id for role in interaction.user.roles]:
+            return await interaction.response.send_message(
+                "Only MM team can close tickets.",
+                ephemeral=True
+            )
+
+        await interaction.response.send_message("Closing ticket...")
+        await interaction.channel.delete()
 
 # ================= COMMANDS =================
 
 @bot.command()
 async def add(ctx, member: discord.Member):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can add users.")
-        return
+        return await ctx.send("Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
     await ctx.send(f"{member.mention} added to ticket.")
 
-
 @bot.command()
 async def remove(ctx, member: discord.Member):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can remove users.")
-        return
+        return await ctx.send("Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, overwrite=None)
     await ctx.send(f"{member.mention} removed from ticket.")
 
-
 @bot.command()
 async def close(ctx):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can close tickets.")
-        return
+        return await ctx.send("Only MM team can close tickets.")
 
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
 
+# ================= PANEL COMMAND =================
 
 @bot.command()
 async def panel(ctx):
