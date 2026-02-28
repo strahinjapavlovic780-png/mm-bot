@@ -96,13 +96,15 @@ async def on_submit(self, interaction: discord.Interaction):
         )
 
     category = guild.get_channel(TICKET_CATEGORY_ID)
-
     mm_role = guild.get_role(MM_ROLE_ID)
-        
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
-        }
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        interaction.user: discord.PermissionOverwrite(
+            view_channel=True,
+            send_messages=True
+        ),
+    }
+    
 
         # SAFE USER PARSE
         try:
