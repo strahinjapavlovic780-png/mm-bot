@@ -759,9 +759,7 @@ class MercyView(discord.ui.View):
 @bot.command()
 async def mercy(ctx, member: discord.Member):
 
-    ROLE_ID = 1453614120673738936
-    STAFF_CHANNEL_ID = 1449366415231553586
-
+    
     embed = discord.Embed(
         title="Hitting Application",
         description="""• **We regret to inform you that you have been scammed**, and we sincerely apologize for this unfortunate situation.
@@ -781,12 +779,11 @@ You have one minute to respond.
 """,
         color=discord.Color.blue()
     )
-
-    await ctx.send(
-        embed=embed,
-        view=MercyView(member, ROLE_ID, STAFF_CHANNEL_ID)
-    )
-            
+await ctx.send(
+    embed=embed,
+    view=MercyView(member)
+)
+    
                             
                                                        
                                                 
