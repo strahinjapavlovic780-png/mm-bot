@@ -301,13 +301,6 @@ async def howmmworks(ctx):
             "7️⃣ Once both sides confirm, the MM safely releases the assets.\n\n"
 
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "⚖️ **Important Rules**\n"
-            "• Both parties must clearly confirm the agreement.\n"
-            "• Do NOT send anything outside the ticket.\n"
-            "• Only trust MM members with the official role.\n"
-            "• Large trades may include a small service fee.\n\n"
-
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
             "🌟 **Eneba's Middleman Service Guarantee**\n"
             "We ensure a **secure, neutral, and protected environment** for every trade.\n"
             "Our reputation is built on **trust, safety, and successful transactions**.\n\n"
