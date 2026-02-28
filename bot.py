@@ -87,10 +87,14 @@ class MMModal(discord.ui.Modal):
 
         guild = interaction.guild
 
-        category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
-        if category is None:
-            category = await guild.create_category(CATEGORY_NAME)
+if TICKET_CATEGORY_ID is None:
+    return await interaction.response.send_message(
+        "❌ Ticket category is not set. Use !setcategoryticket first.",
+        ephemeral=True
+    )
 
+category = guild.get_channel(TICKET_CATEGORY_ID)
+        
         mm_role = guild.get_role(MM_ROLE_ID)
 
         overwrites = {
