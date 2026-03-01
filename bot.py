@@ -250,7 +250,7 @@ class TicketButtons(discord.ui.View):
 async def add(ctx, member: discord.Member):
 
     # Provera da li je ticket kanal
-    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
         return await ctx.send("❌ This command can only be used inside ticket channels.")
 
     # Provera MM role
@@ -265,7 +265,7 @@ async def add(ctx, member: discord.Member):
 async def remove(ctx, member: discord.Member):
 
     # Provera da li je ticket kanal
-    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
         return await ctx.send("❌ This command can only be used inside ticket channels.")
 
     # Provera MM role
@@ -279,7 +279,7 @@ async def remove(ctx, member: discord.Member):
 async def claim(ctx):
 
     # Provera da li je ticket kanal
-    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
         return await ctx.send("❌ This command can only be used inside ticket channels.")
 
     # Provera MM role
@@ -301,6 +301,20 @@ async def close(ctx):
 
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
+
+        
+@bot.command()
+async def claim(ctx):
+
+    # Dozvoljeno samo u ticket kategoriji
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Samo MM team može claim
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only MM team can claim tickets.")
+
+    await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")  
 
 # ================= PANEL COMMAND =================
 
