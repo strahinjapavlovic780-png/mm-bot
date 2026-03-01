@@ -248,19 +248,45 @@ class TicketButtons(discord.ui.View):
 
 @bot.command()
 async def add(ctx, member: discord.Member):
+
+    # Provera da li je ticket kanal
+    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Provera MM role
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        return await ctx.send("Only MM team can use this command.")
+        return await ctx.send("❌ Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
     await ctx.send(f"{member.mention} added to ticket.")
-
+    
+    
 @bot.command()
 async def remove(ctx, member: discord.Member):
+
+    # Provera da li je ticket kanal
+    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Provera MM role
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        return await ctx.send("Only MM team can use this command.")
+        return await ctx.send("❌ Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, overwrite=None)
     await ctx.send(f"{member.mention} removed from ticket.")
+
+@bot.command()
+async def claim(ctx):
+
+    # Provera da li je ticket kanal
+    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Provera MM role
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only MM team can claim tickets.")
+
+    await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")
 
 @bot.command()
 async def close(ctx):
@@ -544,6 +570,11 @@ async def confirm(ctx, user1: discord.Member, user2: discord.Member):
 
 @bot.command()
 async def help(ctx):
+
+    # 🔒 Only Founder can use this command
+    if FOUNDER_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only the Founder can use this command.")
+
     embed = discord.Embed(
         title="📘 Enebas Bot Commands",
         description="Here is a list of all available commands",
@@ -566,6 +597,7 @@ async def help(ctx):
     embed.add_field(
         name="🔒 Claim System",
         value=(
+            "`!claim` – Claim the current ticket\n"
             "`Claim Button` – Claims ticket\n"
             "`Unclaim Button` – Unclaims ticket"
         ),
