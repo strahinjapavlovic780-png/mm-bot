@@ -424,18 +424,6 @@ async def policy(ctx):
     await ctx.send(embed=embed)
 
 
-
-
-# ================= NEW CLAIM COMMAND =================
-
-@bot.command()
-async def claim(ctx):
-    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        await ctx.send("Only MM team can claim tickets.")
-        return
-
-    await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")
-
 # ================= FEE SYSTEM =================
 
 class CustomFeeModal(discord.ui.Modal, title="Custom Fee Split"):
