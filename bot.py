@@ -266,7 +266,7 @@ async def remove(ctx, member: discord.Member):
 async def close(ctx):
 
     # Provera da li je kanal u MM Tickets kategoriji
-    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
         return await ctx.send("❌ This command can only be used inside ticket channels.")
 
     # Provera MM role
