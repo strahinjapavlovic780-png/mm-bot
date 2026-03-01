@@ -264,8 +264,14 @@ async def remove(ctx, member: discord.Member):
 
 @bot.command()
 async def close(ctx):
+
+    # Provera da li je kanal u MM Tickets kategoriji
+    if ctx.channel.category is None or ctx.channel.category.name != "MM Tickets":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Provera MM role
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
-        return await ctx.send("Only MM team can close tickets.")
+        return await ctx.send("❌ Only MM team can close tickets.")
 
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
