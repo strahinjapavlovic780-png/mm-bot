@@ -622,7 +622,7 @@ async def help(ctx):
             "`!close` – Closes the current ticket\n"
             "`!add @user` – Add user to ticket\n"
             "`!remove @user` – Remove user from ticket"
-            `!unclaim` – Unclaim the ticket"
+            "`!unclaim` - Unclaim the ticket
         ),
         inline=False
     )
