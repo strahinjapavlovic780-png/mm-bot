@@ -101,14 +101,14 @@ class MMModal(discord.ui.Modal):
 
         # Ako category nije setovan - napravi novu
         if TICKET_CATEGORY_ID is None:
-            category = await guild.create_category("MM Tickets")
+            category = await guild.create_category("══「 🎫 TICKETS 」══")
             TICKET_CATEGORY_ID = category.id
         else:
             category = guild.get_channel(TICKET_CATEGORY_ID)
 
             # Ako ID postoji ali je category obrisana
             if category is None:
-                category = await guild.create_category("MM Tickets")
+                category = await guild.create_category("══「 🎫 TICKETS 」══")
                 TICKET_CATEGORY_ID = category.id
 
         mm_role = guild.get_role(MM_ROLE_ID)
