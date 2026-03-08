@@ -323,7 +323,26 @@ async def close(ctx):
 
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
-        
+    
+@bot.command()
+async def unclaim(ctx):
+
+    # Provera da li je ticket kanal
+    if ctx.channel.category is None or ctx.channel.category.name != "══「 🎫 TICKETS 」══":
+        return await ctx.send("❌ This command can only be used inside ticket channels.")
+
+    # Provera MM role
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only MM team can unclaim tickets.")
+
+    embed = discord.Embed(
+        title="🔓 Ticket Unclaimed",
+        description=f"{ctx.author.mention} has unclaimed this ticket.\n\n"
+                    f"Another MM can now claim it.",
+        color=discord.Color.orange()
+    )
+
+    await ctx.channel.send(embed=embed)
 
 # ================= PANEL COMMAND =================
 
@@ -603,6 +622,7 @@ async def help(ctx):
             "`!close` – Closes the current ticket\n"
             "`!add @user` – Add user to ticket\n"
             "`!remove @user` – Remove user from ticket"
+            `!unclaim` – Unclaim the ticket"
         ),
         inline=False
     )
