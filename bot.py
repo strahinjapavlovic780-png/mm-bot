@@ -262,9 +262,9 @@ async def add(ctx, member: discord.Member):
     title="✅ User Successfully Added",
     description=f"{member.mention} has been added to the ticket and can now participate in the trade.",
     color=discord.Color.green()
-)
+    )
 
-await ctx.send(embed=embed)
+    await ctx.send(embed=embed)
     
     
 @bot.command()
@@ -285,9 +285,9 @@ embed = discord.Embed(
     title="❌ User Removed",
     description=f"{member.mention} has been removed from the ticket.",
     color=discord.Color.red()
-)
+    )
 
-await ctx.send(embed=embed)
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def claim(ctx):
@@ -305,9 +305,9 @@ async def claim(ctx):
     description=f"{interaction.user.mention} has claimed this ticket!\n\n"
                 f"Ticket is now private.",
     color=discord.Color.green()
-)
+    ) 
 
-await interaction.channel.send(embed=embed)
+    await interaction.channel.send(embed=embed)
 
 @bot.command()
 async def close(ctx):
