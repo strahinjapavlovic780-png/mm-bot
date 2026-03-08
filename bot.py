@@ -835,6 +835,9 @@ class MercyView(discord.ui.View):
 @bot.command()
 async def mercy(ctx, member: discord.Member):
 
+    if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only Middleman can use this command.")
+
     
     embed = discord.Embed(
         title="Hitting Application",
