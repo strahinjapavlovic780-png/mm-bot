@@ -914,7 +914,7 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
     # Persistent views (da dugmad rade i posle restarta)
-    bot.add_view(MMView())
+    bot.add_view(MercyView(None))
     
 
 token = os.getenv("TOKEN")
