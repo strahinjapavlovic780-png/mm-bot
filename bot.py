@@ -309,6 +309,9 @@ async def close(ctx):
 @bot.command()
 async def panel(ctx):
 
+    if FOUNDER_ROLE_ID not in [role.id for role in ctx.author.roles]:
+        return await ctx.send("❌ Only Founder can use this command.")
+
     embed = discord.Embed(
         title="Middleman Service",
         description=(
