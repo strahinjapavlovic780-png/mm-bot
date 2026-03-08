@@ -621,8 +621,9 @@ async def help(ctx):
             "`!panel` – Sends the Middleman panel\n"
             "`!close` – Closes the current ticket\n"
             "`!add @user` – Add user to ticket\n"
-            "`!remove @user` – Remove user from ticket"
-            "`!unclaim` - Unclaim the ticket
+            "`!remove @user` - Remove user from ticket\n"
+            "`!unclaim` - Unclaim the ticket"
+            
         ),
         inline=False
     )
