@@ -258,7 +258,13 @@ async def add(ctx, member: discord.Member):
         return await ctx.send("❌ Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
-    await ctx.send(f"{member.mention} added to ticket.")
+    embed = discord.Embed(
+    title="✅ User Successfully Added",
+    description=f"{member.mention} has been added to the ticket and can now participate in the trade.",
+    color=discord.Color.green()
+)
+
+await ctx.send(embed=embed)
     
     
 @bot.command()
@@ -273,7 +279,15 @@ async def remove(ctx, member: discord.Member):
         return await ctx.send("❌ Only MM team can use this command.")
 
     await ctx.channel.set_permissions(member, overwrite=None)
-    await ctx.send(f"{member.mention} removed from ticket.")
+    await ctx.channel.set_permissions(member, overwrite=None)
+
+embed = discord.Embed(
+    title="❌ User Removed",
+    description=f"{member.mention} has been removed from the ticket.",
+    color=discord.Color.red()
+)
+
+await ctx.send(embed=embed)
 
 @bot.command()
 async def claim(ctx):
@@ -286,7 +300,14 @@ async def claim(ctx):
     if MM_ROLE_ID not in [role.id for role in ctx.author.roles]:
         return await ctx.send("❌ Only MM team can claim tickets.")
 
-    await ctx.send(f"🔒 {ctx.author.mention} has claimed this ticket and is now handling this trade.")
+    embed = discord.Embed(
+    title="✅ Ticket Claimed",
+    description=f"{interaction.user.mention} has claimed this ticket!\n\n"
+                f"Ticket is now private.",
+    color=discord.Color.green()
+)
+
+await interaction.channel.send(embed=embed)
 
 @bot.command()
 async def close(ctx):
